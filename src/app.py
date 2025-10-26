@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
-from utils.parser_txt import ler_relatorio_pcdmis  # Importa o parser dos relatórios
+from utils.parser_txt import ler_relatorio_pcdmis  
 
 
 # ========================== FUNÇÃO: CADASTRAR PEÇA ==========================
@@ -125,7 +125,7 @@ def gerenciar_relatorios():
     st.divider()
     st.subheader("📈 Extrair Dados dos Relatórios TXT")
 
-    if arquivos:  # se houver relatórios
+    if arquivos:  
         if st.button("📤 Ler e Extrair Dados"):
             df_total = pd.DataFrame()
             for nome_arquivo in arquivos:
@@ -134,14 +134,12 @@ def gerenciar_relatorios():
                 df["Relatorio"] = nome_arquivo
                 df_total = pd.concat([df_total, df], ignore_index=True)
 
-            # salva os dados extraídos dentro da pasta da peça
             arquivo_analise = os.path.join(os.path.dirname(pasta_txt), "analise.xlsx")
             df_total.to_excel(arquivo_analise, index=False)
             st.success(f"✅ Dados extraídos e salvos em '{arquivo_analise}'")
 
             st.dataframe(df_total)
         else:
-            # se já existir um arquivo salvo, exibe ele
             arquivo_analise = os.path.join(os.path.dirname(pasta_txt), "analise.xlsx")
             if os.path.exists(arquivo_analise):
                 st.info("📊 Dados extraídos anteriormente:")
