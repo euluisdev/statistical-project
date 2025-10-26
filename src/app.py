@@ -1,7 +1,10 @@
 import streamlit as st
 import pandas as pd
 import os
+from utils.parser_txt import ler_relatorio_pcdmis  # Importa o parser dos relatórios
 
+
+# ========================== FUNÇÃO: CADASTRAR PEÇA ==========================
 def cadastrar_peca():
     st.title("🧾 Cadastrar Peça")
 
@@ -19,8 +22,10 @@ def cadastrar_peca():
             return
 
         base_path = "dados/base_pecas.xlsx"
-        df = pd.read_excel(base_path) if os.path.exists(base_path) else pd.DataFrame(
-            columns=["ID","Nome","PartNumber","Modelo","DataCadastro","PastaTXT","Status"]
+        df = (
+            pd.read_excel(base_path)
+            if os.path.exists(base_path)
+            else pd.DataFrame(columns=["ID", "Nome", "PartNumber", "Modelo", "DataCadastro", "PastaTXT", "Status"])
         )
 
         if numero in df["PartNumber"].astype(str).values:
@@ -38,14 +43,16 @@ def cadastrar_peca():
             "Modelo": modelo,
             "DataCadastro": pd.Timestamp.now(),
             "PastaTXT": pasta_txt,
-            "Status": "Ativa"
+            "Status": "Ativa",
         }
 
         df = pd.concat([df, pd.DataFrame([nova])], ignore_index=True)
         df.to_excel(base_path, index=False)
 
-        st.success(f"Peça '{nome}' cadastrada com sucesso!")
+        st.success(f"✅ Peça '{nome}' cadastrada com sucesso!")
 
+
+# ========================== FUNÇÃO: GERENCIAR RELATÓRIOS ==========================
 def gerenciar_relatorios():
     st.title("⚙️ Gerenciar Relatórios TXT da Peça")
 
@@ -79,10 +86,16 @@ def gerenciar_relatorios():
     else:
         st.info("Nenhum relatório importado ainda.")
 
+    # ---------- Upload e exclusão de relatórios ----------
     col1, col2 = st.columns([1, 2])
 
     with col1:
-        uploads = st.file_uploader("📥 Importar novos relatórios TXT", type=["txt"], accept_multiple_files=True, label_visibility="collapsed")
+        uploads = st.file_uploader(
+            "📥 Importar novos relatórios TXT",
+            type=["txt"],
+            accept_multiple_files=True,
+            label_visibility="collapsed",
+        )
         if uploads:
             for file in uploads:
                 caminho = os.path.join(pasta_txt, file.name)
@@ -92,20 +105,52 @@ def gerenciar_relatorios():
 
     with col2:
         if arquivos:
-            excluir = st.multiselect("Selecione relatórios para excluir:", arquivos)
-            if st.button("🗑️"):
-                if not excluir:
-                    st.warning("❗ Nenhum relatório selecionado para exclusão.")
-                else:
-                    for arq in excluir:
-                        caminho = os.path.join(pasta_txt, arq)
-                        if os.path.exists(caminho):
-                            os.remove(caminho)
-                    st.success(f"{len(excluir)} arquivo(s) excluído(s) com sucesso!")
+            col_excluir1, col_excluir2 = st.columns([3, 1])
+            with col_excluir1:
+                excluir = st.multiselect("Selecione relatórios para excluir:", arquivos)
+            with col_excluir2:
+                if st.button("🗑️ Excluir"):
+                    if not excluir:
+                        st.warning("❗ Nenhum relatório selecionado para exclusão.")
+                    else:
+                        for arq in excluir:
+                            caminho = os.path.join(pasta_txt, arq)
+                            if os.path.exists(caminho):
+                                os.remove(caminho)
+                        st.success(f"{len(excluir)} arquivo(s) excluído(s) com sucesso!")
         else:
             st.info("Nenhum relatório disponível para exclusão.")
 
-# ---------------------- Layout principal ----------------------
+    # ====================== EXTRAÇÃO DE DADOS ======================
+    st.divider()
+    st.subheader("📈 Extrair Dados dos Relatórios TXT")
+
+    if arquivos:  # se houver relatórios
+        if st.button("📤 Ler e Extrair Dados"):
+            df_total = pd.DataFrame()
+            for nome_arquivo in arquivos:
+                caminho = os.path.join(pasta_txt, nome_arquivo)
+                df = ler_relatorio_pcdmis(caminho)
+                df["Relatorio"] = nome_arquivo
+                df_total = pd.concat([df_total, df], ignore_index=True)
+
+            # salva os dados extraídos dentro da pasta da peça
+            arquivo_analise = os.path.join(os.path.dirname(pasta_txt), "analise.xlsx")
+            df_total.to_excel(arquivo_analise, index=False)
+            st.success(f"✅ Dados extraídos e salvos em '{arquivo_analise}'")
+
+            st.dataframe(df_total)
+        else:
+            # se já existir um arquivo salvo, exibe ele
+            arquivo_analise = os.path.join(os.path.dirname(pasta_txt), "analise.xlsx")
+            if os.path.exists(arquivo_analise):
+                st.info("📊 Dados extraídos anteriormente:")
+                st.dataframe(pd.read_excel(arquivo_analise))
+    else:
+        st.info("Nenhum relatório disponível para extração.")
+
+
+# ========================== LAYOUT PRINCIPAL ==========================
 st.sidebar.title("Menu")
 opcao = st.sidebar.radio("Escolha uma opção:", ["Cadastrar Peça", "Gerenciar Relatórios"])
 
