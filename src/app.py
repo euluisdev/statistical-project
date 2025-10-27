@@ -102,6 +102,7 @@ def gerenciar_relatorios():
                 with open(caminho, "wb") as f:
                     f.write(file.read())
             st.success(f"{len(uploads)} arquivo(s) importado(s) com sucesso!")
+            st.rerun()
 
     with col2:
         if arquivos:
@@ -118,6 +119,7 @@ def gerenciar_relatorios():
                             if os.path.exists(caminho):
                                 os.remove(caminho)
                         st.success(f"{len(excluir)} arquivo(s) excluído(s) com sucesso!")
+                        st.rerun()
         else:
             st.info("Nenhum relatório disponível para exclusão.")
 
