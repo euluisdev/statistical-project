@@ -77,5 +77,6 @@ def ler_relatorio_pcdmis(caminho_arquivo):
             "Eixo", "Nominal", "Medido", "Desvio", "Tol+", "Tol-"
         ]
     )
+    df["Tol-"] = df["Tol-"].apply(lambda x: -x if pd.notnull(x) else x)
 
     return df
