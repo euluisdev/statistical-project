@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 from utils.parser_txt import ler_relatorio_pcdmis  
-
+from pages.master_sheet import folha_mestre
 
 # ========================== FUNÇÃO: CADASTRAR PEÇA ==========================
 def cadastrar_peca():
@@ -140,6 +140,8 @@ def gerenciar_relatorios():
             df_total.to_excel(arquivo_analise, index=False)
             st.success(f"✅ Dados extraídos e salvos em '{arquivo_analise}'")
 
+            st.session_state['peca_atual'] = peca
+            st.session_state['df_peca'] = df_total
             st.dataframe(df_total)
         else:
             arquivo_analise = os.path.join(os.path.dirname(pasta_txt), "analise.xlsx")
@@ -152,9 +154,11 @@ def gerenciar_relatorios():
 
 # ========================== LAYOUT PRINCIPAL ==========================
 st.sidebar.title("Menu")
-opcao = st.sidebar.radio("Escolha uma opção:", ["Cadastrar Peça", "Gerenciar Relatórios"])
+opcao = st.sidebar.radio("Escolha uma opção:", ["Cadastrar Peça", "Gerenciar Relatórios", "Folha Mestre"])
 
 if opcao == "Cadastrar Peça":
     cadastrar_peca()
+if opcao == "Folha Mestre":
+    folha_mestre()
 else:
     gerenciar_relatorios()
