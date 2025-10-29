@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 
 def folha_mestre():
     if 'peca_atual' not in st.session_state or 'df_peca' not in st.session_state:
@@ -7,107 +8,142 @@ def folha_mestre():
         return
 
     peca = st.session_state['peca_atual']
-    df = st.session_state['df_peca']
+    df = st.session_state['df_peca'].copy()
 
     for col in ["Desvio", "Tol+", "Tol-"]:
         df[col] = pd.to_numeric(df[col].astype(str).str.replace(",", "."), errors='coerce')
 
     st.title(f"📊 Folha Mestre - {peca['Nome']} ({peca['PartNumber']})")
 
+    imagem = st.file_uploader("📷 Carregue a imagem da peça", type=["png", "jpg", "jpeg"])
+    if imagem:
+        st.image(imagem, use_container_width=True)
+
     if "Eixo" in df.columns:
         df["PontoEixo"] = df["NomePonto"].astype(str) + " - " + df["Eixo"].astype(str)
     else:
         df["PontoEixo"] = df["NomePonto"].astype(str)
 
-    # aprovação
-    dentro_tol = (df["Desvio"] >= df["Tol-"]) & (df["Desvio"] <= df["Tol+"])
-    df["DentroTol"] = dentro_tol
+    df_media = (
+        df.groupby("PontoEixo", as_index=False)
+        .agg({
+            "Desvio": "mean",
+            "Tol+": "max",
+            "Tol-": "min"
+        })
+    )
 
-    def proximos(grupo):
-        tol_superior = grupo["Tol+"].max()
-        tol_inferior = grupo["Tol-"].min()
-        faixa = tol_superior - tol_inferior
-        limite_superior = tol_superior - 0.2 * faixa
-        limite_inferior = tol_inferior + 0.2 * faixa
-        return any((grupo["Desvio"] <= limite_inferior) | (grupo["Desvio"] >= limite_superior)) \
-            and all((grupo["Desvio"] >= tol_inferior) & (grupo["Desvio"] <= tol_superior))
+    df_media["DentroTol"] = (df_media["Desvio"] >= df_media["Tol-"]) & (df_media["Desvio"] <= df_media["Tol+"])
 
-    pontos = df.groupby("PontoEixo")["DentroTol"].all()
-    total_pontos = len(pontos)
-    pontos_aprovados = pontos.sum()
-    pontos_reprovados = total_pontos - pontos_aprovados
-    pct_aprovado = (pontos_aprovados / total_pontos * 100) if total_pontos > 0 else 0
-    pct_reprovado = (pontos_reprovados / total_pontos * 100) if total_pontos > 0 else 0
+    def eh_proximo(row):
+        if not row["DentroTol"]:
+            return False
+        tol_sup = row["Tol+"]
+        tol_inf = row["Tol-"]
+        faixa = tol_sup - tol_inf
+        if faixa == 0:
+            return False
+        limite_superior = tol_sup - 0.2 * faixa
+        limite_inferior = tol_inf + 0.2 * faixa
+        return (row["Desvio"] >= limite_superior) or (row["Desvio"] <= limite_inferior)
 
-    proximos_count = df.groupby("PontoEixo").apply(proximos).sum()
-    pct_proximos = (proximos_count / total_pontos * 100) if total_pontos > 0 else 0
+    df_media["ProximoTol"] = df_media.apply(eh_proximo, axis=1)
+    df_media["Aprovado_Exclusivo"] = df_media["DentroTol"] & (~df_media["ProximoTol"])
+    df_media["Reprovado"] = ~df_media["DentroTol"]
 
+    total_pontos = len(df_media)
+    qh_aprovados = int(df_media["Aprovado_Exclusivo"].sum())
+    qh_proximos = int(df_media["ProximoTol"].sum())
+    qh_reprovados = int(df_media["Reprovado"].sum())
 
-    # CP CPK global
-    if not df.empty:
-        sigma = df["Desvio"].std(ddof=1)
-        media = df["Desvio"].mean()
-        USL = df["Tol+"].max()
-        LSL = df["Tol-"].min()
-        cp = (USL - LSL) / (6 * sigma) if sigma > 0 else 0
-        cpk = min((USL - media) / (3 * sigma), (media - LSL) / (3 * sigma)) if sigma > 0 else 0
-    else:
-        cp, cpk = 0, 0
+    pct_qh_aprov = (qh_aprovados / total_pontos * 100) if total_pontos else 0
+    pct_qh_prox = (qh_proximos / total_pontos * 100) if total_pontos else 0
+    pct_qh_rep = (qh_reprovados / total_pontos * 100) if total_pontos else 0
 
-    # CP e CPK individual
-    def cp_val(grupo):
-        std = grupo["Desvio"].std(ddof=0) if len(grupo) > 1 else 1
-        return (grupo["Tol+"].max() - grupo["Tol-"].min()) / (6 * std)
+    # ---------------------------
+    # Cálculo CP e CPK adaptado às fórmulas clássicas
+    cp_list, cpk_list = [], []
 
-    def cpk_val(grupo):
-        std = grupo["Desvio"].std(ddof=0) if len(grupo) > 1 else 1
-        media = grupo["Desvio"].mean()
-        return min(grupo["Tol+"].max() - media, media - grupo["Tol-"].min()) / (3 * std)
+    for ponto in df["PontoEixo"].unique():
+        df_ponto = df[df["PontoEixo"] == ponto]
 
-    cps = df.groupby("PontoEixo").apply(cp_val)
-    cpks = df.groupby("PontoEixo").apply(cpk_val)
+        desvios = df_ponto["Desvio"].values
+        sigma = np.std(desvios, ddof=1) if len(desvios) > 1 else 0
+        media = np.mean(desvios) if len(desvios) > 0 else 0
 
-    cp_bom_count = (cps >= 1.33).sum()
-    cpk_bom_count = (cpks >= 1.33).sum()
-    cp_medio_count = ((cps >= 1) & (cps < 1.33)).sum()
-    cpk_medio_count = ((cpks >= 1) & (cpks < 1.33)).sum()
+        LSL = df_ponto["Tol-"].iloc[0]
+        USL = df_ponto["Tol+"].iloc[0]
+        tolerancia_total = USL - LSL
 
-    pct_cp_bom = (cp_bom_count / total_pontos * 100) if total_pontos > 0 else 0
-    pct_cpk_bom = (cpk_bom_count / total_pontos * 100) if total_pontos > 0 else 0
-    pct_cp_medio = (cp_medio_count / total_pontos * 100) if total_pontos > 0 else 0
-    pct_cpk_medio = (cpk_medio_count / total_pontos * 100) if total_pontos > 0 else 0
+        cp_val = tolerancia_total / (6 * sigma) if sigma > 0 else 0
+        cpk_val = min((USL - media) / (3 * sigma), (media - LSL) / (3 * sigma)) if sigma > 0 else 0
 
-    #tabela final
+        cp_list.append((ponto, cp_val))
+        cpk_list.append((ponto, cpk_val))
+
+    df_cp = pd.DataFrame(cp_list, columns=["PontoEixo", "CP"])
+    df_cpk = pd.DataFrame(cpk_list, columns=["PontoEixo", "CPK"])
+
+    # Classificação exclusiva
+    def classifica(val):
+        if val < 1:
+            return "Reprovado"
+        elif 1 <= val < 1.33:
+            return "Alerta"
+        else:
+            return "Aprovado"
+
+    df_cp["Status"] = df_cp["CP"].apply(classifica)
+    df_cpk["Status"] = df_cpk["CPK"].apply(classifica)
+
+    # Contagem para tabela
+    cp_aprov = (df_cp["Status"] == "Aprovado").sum()
+    cp_alerta = (df_cp["Status"] == "Alerta").sum()
+    cp_reprov = (df_cp["Status"] == "Reprovado").sum()
+    cp_total = len(df_cp)
+    pct_cp_aprov = cp_aprov / cp_total * 100
+    pct_cp_alerta = cp_alerta / cp_total * 100
+    pct_cp_reprov = cp_reprov / cp_total * 100
+
+    cpk_aprov = (df_cpk["Status"] == "Aprovado").sum()
+    cpk_alerta = (df_cpk["Status"] == "Alerta").sum()
+    cpk_reprov = (df_cpk["Status"] == "Reprovado").sum()
+    cpk_total = len(df_cpk)
+    pct_cpk_aprov = cpk_aprov / cpk_total * 100
+    pct_cpk_alerta = cpk_alerta / cpk_total * 100
+    pct_cpk_reprov = cpk_reprov / cpk_total * 100
+
+    # ---------------------------
+    # Montar tabela final
     tabela = pd.DataFrame({
         "Indicador": ["QH", "CP", "CPK"],
-        "Pontos Aprovados": [pontos_aprovados, cp_bom_count, cpk_bom_count],
-        "Porcentagem Aprov.": [pct_aprovado, pct_cp_bom, pct_cpk_bom],
-        "Pontos Médios": [proximos_count, cp_medio_count, cpk_medio_count],
-        "Porcentagem Médios": [pct_proximos, pct_cp_medio, pct_cpk_medio],
-        "Pontos Reprovados": [pontos_reprovados, total_pontos - cp_bom_count, total_pontos - cpk_bom_count],
-        "Porcentagem Reprov.": [pct_reprovado, 100 - pct_cp_bom, 100 - pct_cpk_bom],
+        "Aprovados": [qh_aprovados, cp_aprov, cpk_aprov],
+        "% Aprov.": [f"{pct_qh_aprov:.1f}%", f"{pct_cp_aprov:.1f}%", f"{pct_cpk_aprov:.1f}%"],
+        "Alerta": [qh_proximos, cp_alerta, cpk_alerta],
+        "% Alerta": [f"{pct_qh_prox:.1f}%", f"{pct_cp_alerta:.1f}%", f"{pct_cpk_alerta:.1f}%"],
+        "Reprovados": [qh_reprovados, cp_reprov, cpk_reprov],
+        "% Reprov.": [f"{pct_qh_rep:.1f}%", f"{pct_cp_reprov:.1f}%", f"{pct_cpk_reprov:.1f}%"]
     }).set_index("Indicador")
 
-    # style
-    def verde(val): return 'background-color: #8fcf79'
-    def amarelo(val): return 'background-color: #fff59d'
-    def vermelho(val): return 'background-color: #f28b82'
-
-    for col in ["Porcentagem Aprov.", "Porcentagem Médios", "Porcentagem Reprov."]:
-        tabela[col] = tabela[col].apply(lambda x: f"{x:.1f}%")
+    # ---------------------------
+    # Estilo da tabela
+    def verde(val): return 'background-color: #8fcf79; color: black'
+    def amarelo(val): return 'background-color: #fff59d; color: black'
+    def vermelho(val): return 'background-color: #f28b82; color: black'
 
     tabela_style = (
         tabela.style
-        .applymap(verde, subset=["Pontos Aprovados", "Porcentagem Aprov."])
-        .applymap(amarelo, subset=["Pontos Médios", "Porcentagem Médios"])
-        .applymap(vermelho, subset=["Pontos Reprovados", "Porcentagem Reprov."])
+        .applymap(verde, subset=["Aprovados", "% Aprov."])
+        .applymap(amarelo, subset=["Alerta", "% Alerta"])
+        .applymap(vermelho, subset=["Reprovados", "% Reprov."])
     )
 
     st.dataframe(tabela_style, use_container_width=True)
 
+    # ---------------------------
+    # Resumo textual
     st.write("📈 Resumo")
     st.write(f"Total de pontos analisados: {total_pontos}")
-    st.write(f"🟩 Dentro da tolerância (QH): {pontos_aprovados} ({pct_aprovado:.1f}%)")
-    st.write(f"🟨 Próximos da tolerância (ainda aprovados): {proximos_count} ({pct_proximos:.1f}%)")
-    st.write(f"🟥 Fora da tolerância: {pontos_reprovados} ({pct_reprovado:.1f}%)")
-    st.write(f"📊 CP global = {cp:.2f} | CPK global = {cpk:.2f}")
+    st.write(f"🟩 Aprovados: {qh_aprovados} ({pct_qh_aprov:.1f}%)")
+    st.write(f"🟨 Em alerta: {qh_proximos} ({pct_qh_prox:.1f}%)")
+    st.write(f"🟥 Fora da tolerância: {qh_reprovados} ({pct_qh_rep:.1f}%)")
