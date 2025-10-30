@@ -24,6 +24,7 @@ def trend_chart():
     peca = st.session_state['peca_atual']
     df = st.session_state['df_peca'].copy()
 
+    # ========================== DATA E HORA ==========================
     if 'Data' in df.columns and 'Hora' in df.columns:
         df['DataHora'] = pd.to_datetime(
             df['Data'].astype(str).str.strip() + ' ' + df['Hora'].astype(str).str.strip(),
@@ -40,6 +41,7 @@ def trend_chart():
         st.error("❌ O DataFrame não contém colunas 'Data' e 'Hora'.")
         st.stop()
 
+    # ========================== CAMPOS BASE ==========================
     df['NomePonto'] = df['NomePonto'].astype(str)
     df['Eixo'] = df['Eixo'].astype(str)
     df['PontoEixo'] = df['NomePonto'] + " - " + df['Eixo']
@@ -47,124 +49,110 @@ def trend_chart():
     st.markdown(f"### Peça atual:")
     st.code(str(peca))
 
-    #Selecionar pontos
+    # ========================== SELECIONAR PONTOS ==========================
     st.subheader("Selecione um ponto para gerar o gráfico:")
-    if not {'PontoEixo', 'NomePonto', 'Eixo', 'Desvio'}.issubset(df.columns):
-        st.error("❌ O DataFrame precisa conter as colunas 'NomePonto', 'Eixo' e 'Desvio'.")
+    if not {'PontoEixo', 'NomePonto', 'Eixo', 'Desvio', 'Tol+', 'Tol-'}.issubset(df.columns):
+        st.error("❌ O DataFrame precisa conter as colunas 'NomePonto', 'Eixo', 'Desvio', 'Tol+' e 'Tol-'.")
         st.stop()
 
     opcoes = df['PontoEixo'].drop_duplicates().sort_values().tolist()
     pontos_selecionados = st.multiselect(
-        "Escolha os pontos (ex: CÍR1 - X):",
+        "Escolha os pontos:",
         options=opcoes,
         default=[]
     )
 
     if pontos_selecionados:
         df_filtrado = df[df['PontoEixo'].isin(pontos_selecionados)].copy()
-
-        #limite fixo
-        col1, col2 = st.columns(2)
-        with col1:
-            lsl = st.number_input("LIE (Limite Inferior)", value=-0.5, step=0.01)
-        with col2:
-            usl = st.number_input("LSE (Limite Superior)", value=0.5, step=0.01)
-
-        #gráfico
-        st.subheader("📊 Gráfico de Tendência")
-
-        fig, ax = plt.subplots(figsize=(10, 5))
-
         df_filtrado = df_filtrado.dropna(subset=['Desvio', 'DataHora']).copy()
+
         if df_filtrado.empty:
             st.warning("Nenhuma linha com Desvio e DataHora válidos para os pontos selecionados.")
             st.stop()
 
-        all_dates = []
+        # ========================== GRÁFICOS POR PONTO ==========================
+        st.subheader("Gráficos de Tendência")
+
         for pontoeixo in pontos_selecionados:
             dados_ponto = df_filtrado[df_filtrado['PontoEixo'] == pontoeixo].copy()
             if dados_ponto.empty:
+                st.info(f"Sem dados válidos para {pontoeixo}.")
                 continue
+
             dados_ponto = dados_ponto.sort_values(by='DataHora')
-            all_dates.extend(dados_ponto['DataHora'].tolist())
 
-        if len(all_dates) == 0:
-            st.warning("Nenhuma data válida para plotar.")
-        else:
+            usl = dados_ponto['Tol+'].iloc[0]
+            lsl = -abs(dados_ponto['Tol-'].iloc[0])  
 
-            unique_dates = sorted(list(dict.fromkeys(all_dates)))
+            x_nums = mdates.date2num(dados_ponto['DataHora'])
+            date_nums = mdates.date2num(sorted(dados_ponto['DataHora'].unique()))
 
-            max_ticks = 12 
-            if len(unique_dates) > max_ticks:
-                step = max(1, int(np.ceil(len(unique_dates) / max_ticks)))
-                unique_dates = unique_dates[::step]
+            fig, ax = plt.subplots(figsize=(12, 3))
 
-            #number matplotlib
-            date_nums = mdates.date2num(unique_dates)
-
-            for pontoeixo in pontos_selecionados:
-                dados_ponto = df_filtrado[df_filtrado['PontoEixo'] == pontoeixo].copy()
-                if dados_ponto.empty:
-                    continue
-                dados_ponto = dados_ponto.sort_values(by='DataHora')
-                x_nums = mdates.date2num(dados_ponto['DataHora'])
-                ax.plot(
-                    x_nums,
-                    dados_ponto['Desvio'],
-                    marker='o',
-                    linestyle='-',
-                    linewidth=1.5,
-                    label=pontoeixo
-                )
-                #st.write(dados_ponto[['NomePonto', 'Eixo', 'Data', 'Hora', 'DataHora', 'Desvio']])
+            ax.plot(
+                x_nums,
+                dados_ponto['Desvio'],
+                marker='o',
+                linestyle='-',
+                linewidth=1.5,
+                label=pontoeixo
+            )
 
             ax.xaxis.set_major_locator(FixedLocator(date_nums))
             ax.xaxis.set_major_formatter(mdates.DateFormatter("%d/%m %H:%M:%S"))
 
-            ax.axhline(usl, color="red", linestyle="--", linewidth=1, label="LSE")
-            ax.axhline(lsl, color="red", linestyle="--", linewidth=1, label="LIE")
-            ax.axhline(0, color="black", linestyle="--", linewidth=1, label="Nominal")
+            # --- Linhas horizontais usando as tolerâncias automáticas ---
+            ax.axhline(usl, color="#FF3333", linestyle="--", linewidth=1, label=f"LSE ({usl:.3f})")
+            ax.axhline(lsl, color="#FF3333", linestyle="--", linewidth=1, label=f"LIE ({lsl:.3f})")
+            ax.axhline(0, color="#00FF66", linestyle="--", linewidth=1, label="Especificado")
 
-            #eixo Y fixo 2 de range
             ax.set_ylim(-1, 1)
-            ax.set_yticks(np.arange(-1, 1.1, 0.5))
-            ax.set_ylabel("Desvio (mm)")
-
+            ax.set_yticks([-1, -0.6, -0.3, 0, 0.3, 0.6, 1])
             ax.set_xlim(date_nums[0], date_nums[-1])
 
             plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
-            ax.grid(True, linestyle='--', alpha=0.6)
+            plt.tight_layout(pad=0.5)
+            ax.grid(False)
             ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left')
 
             st.pyplot(fig, use_container_width=True)
+            st.markdown("<hr style='margin: 6px 0;'>", unsafe_allow_html=True)
 
-        #calcular cp cpk
+        # ========================== CÁLCULOS Cp / Cpk ==========================
         st.subheader("📏 Indicadores Estatísticos")
         resultados = []
 
         for pontoeixo in pontos_selecionados:
-            dados_ponto = df[df['PontoEixo'] == pontoeixo]['Desvio'].dropna().values
-            nomep, eixo = pontoeixo.rsplit(" - ", 1)
-            cp, cpk, media, desvio = calcular_cp_cpk(dados_ponto, lsl, usl)
+            dados_ponto = df[df['PontoEixo'] == pontoeixo].copy()
+            if dados_ponto.empty:
+                continue
+
+            usl = dados_ponto['Tol+'].iloc[0]
+            lsl = -abs(dados_ponto['Tol-'].iloc[0])
+            valores = dados_ponto['Desvio'].dropna().values
+
+            #nomep, eixo = pontoeixo.rsplit(" - ", 1)
+            cp, cpk, media, desvio = calcular_cp_cpk(valores, lsl, usl)
+
             resultados.append([
-                nomep, eixo, pontoeixo, round(media, 5), round(desvio, 5),
+                pontoeixo, round(media, 5), round(desvio, 5),
                 (round(cp, 3) if (cp is not None and not np.isnan(cp)) else None),
                 (round(cpk, 3) if (cpk is not None and not np.isnan(cpk)) else None)
             ])
 
         df_result = pd.DataFrame(resultados, columns=[
-            "NomePonto", "Eixo", "PontoEixo", "Média", "Desvio", "Cp", "Cpk"
+            "PontoEixo", "Média", "Desvio", "Cp", "Cpk"
         ])
 
         def cor_cpk(val):
             if pd.isna(val):
                 return ''
             if val >= 1.33:
-                return 'background-color: #d9fbd9'  # verde
+                return 'background-color: #00FF66'  # verde
             elif val >= 1.0:
-                return 'background-color: #fff5b5'  # amarelo
+                return 'background-color: #FFFF33'  # amarelo
             else:
-                return 'background-color: #f5b5b5'  # vermelho
+                return 'background-color: #FF3333'  # vermelho
 
         st.dataframe(df_result.style.map(cor_cpk, subset=['Cp', 'Cpk']), use_container_width=True)
 
