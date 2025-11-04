@@ -60,8 +60,6 @@ def folha_mestre():
     pct_qh_prox = (qh_proximos / total_pontos * 100) if total_pontos else 0
     pct_qh_rep = (qh_reprovados / total_pontos * 100) if total_pontos else 0
 
-    # ---------------------------
-    # Cálculo CP e CPK adaptado às fórmulas clássicas
     cp_list, cpk_list = [], []
 
     for ponto in df["PontoEixo"].unique():
@@ -84,7 +82,6 @@ def folha_mestre():
     df_cp = pd.DataFrame(cp_list, columns=["PontoEixo", "CP"])
     df_cpk = pd.DataFrame(cpk_list, columns=["PontoEixo", "CPK"])
 
-    # Classificação exclusiva
     def classifica(val):
         if val < 1:
             return "Reprovado"
@@ -96,7 +93,6 @@ def folha_mestre():
     df_cp["Status"] = df_cp["CP"].apply(classifica)
     df_cpk["Status"] = df_cpk["CPK"].apply(classifica)
 
-    # Contagem para tabela
     cp_aprov = (df_cp["Status"] == "Aprovado").sum()
     cp_alerta = (df_cp["Status"] == "Alerta").sum()
     cp_reprov = (df_cp["Status"] == "Reprovado").sum()
@@ -113,8 +109,6 @@ def folha_mestre():
     pct_cpk_alerta = cpk_alerta / cpk_total * 100
     pct_cpk_reprov = cpk_reprov / cpk_total * 100
 
-    # ---------------------------
-    # Montar tabela final
     tabela = pd.DataFrame({
         "Indicador": ["QH", "CP", "CPK"],
         "Aprovados": [qh_aprovados, cp_aprov, cpk_aprov],
@@ -125,8 +119,7 @@ def folha_mestre():
         "% Reprov.": [f"{pct_qh_rep:.1f}%", f"{pct_cp_reprov:.1f}%", f"{pct_cpk_reprov:.1f}%"]
     }).set_index("Indicador")
 
-    # ---------------------------
-    # Estilo da tabela
+    #style 
     def verde(val): return 'background-color: #8fcf79; color: black'
     def amarelo(val): return 'background-color: #fff59d; color: black'
     def vermelho(val): return 'background-color: #f28b82; color: black'
@@ -139,9 +132,6 @@ def folha_mestre():
     )
 
     st.dataframe(tabela_style, use_container_width=True)
-
-    # ---------------------------
-    # Resumo textual
     st.write("📈 Resumo")
     st.write(f"Total de pontos analisados: {total_pontos}")
     st.write(f"🟩 Aprovados: {qh_aprovados} ({pct_qh_aprov:.1f}%)")

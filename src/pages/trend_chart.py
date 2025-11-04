@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.ticker import FixedLocator
+import os
+import io
 
 def calcular_cp_cpk(valores, lsl, usl):
     media = np.mean(valores)
@@ -58,6 +60,7 @@ def trend_chart():
         options=opcoes,
         default=[]
     )
+    figuras_geradas = [] 
 
     if pontos_selecionados:
         df_filtrado = df[df['PontoEixo'].isin(pontos_selecionados)].copy()
@@ -88,7 +91,7 @@ def trend_chart():
             lsl = -abs(dados_ponto['Tol-'].iloc[0])
             cp, cpk, media, desvio = calcular_cp_cpk(valores, lsl, usl)
 
-    # Limites de controle (3σ)
+    #Limites de controle (3σ)
             lsc = media + 3 * desvio
             lic = media - 3 * desvio
 
@@ -96,15 +99,15 @@ def trend_chart():
             gs = fig.add_gridspec(1, 2, width_ratios=[3, 1])
             ax = fig.add_subplot(gs[0])
 
-    # 🔹 Gráfico com espaçamento fixo (0,1,2,3...)
+    # espaçamento fixo 
             ax.plot(x_pos, valores, marker='o', markersize=6, linewidth=2,
                     color='#007ACC', markerfacecolor='white', markeredgecolor='#007ACC', label=pontoeixo)
 
-    # 🔹 Datas reais como labels
+    #Datas reais como labels
             ax.set_xticks(x_pos)
             ax.set_xticklabels(x_labels, rotation=45, ha='right')
 
-    # 🔹 Linhas horizontais
+    #Linhas horizontais
             ax.axhline(usl, color="#FF3333", linestyle="--", linewidth=1, label='LSE')
             ax.axhline(lsl, color="#FF3333", linestyle="--", linewidth=1, label='LIE')
             ax.axhline(media, color='green', linewidth=2, label='AVERAGE')
@@ -128,7 +131,7 @@ def trend_chart():
             )
 
         
-    # 🔹 TABELA de resultados ao lado (sem alterações)
+    #resultados ao lado
             ax2 = fig.add_subplot(gs[1])
             ax2.axis('off')
             tabela = [
@@ -150,9 +153,30 @@ def trend_chart():
 
             plt.tight_layout(pad=1)
             st.pyplot(fig, use_container_width=True)
-            st.markdown("<hr style='margin: 6px 0;'>", unsafe_allow_html=True)
+            
+            
+            figuras_geradas.append((pontoeixo, fig))
+            
+        if figuras_geradas and st.button("💾 Salvar todos os gráficos selecionados"):  # ✅
+            pasta = "trend_images"
+            os.makedirs(pasta, exist_ok=True)
 
-        # ========================== CÁLCULOS Cp / Cpk ==========================
+            if "trend_pages" not in st.session_state:
+                st.session_state["trend_pages"] = []
+
+            for nome, figura in figuras_geradas:
+                caminho_arquivo = os.path.join(pasta, f"{nome.replace(' ', '_')}.png")
+                figura.savefig(caminho_arquivo, dpi=300, bbox_inches='tight')
+
+                st.session_state["trend_pages"].append({
+                    "nome": nome,
+                    "arquivo": caminho_arquivo
+                })
+
+            st.success(f"✅ {len(figuras_geradas)} gráfico(s) salvo(s) com sucesso!")
+
+
+
         st.subheader("📏 Indicadores Estatísticos")
         resultados = []
 

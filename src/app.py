@@ -5,6 +5,7 @@ from utils.parser_txt import ler_relatorio_pcdmis
 from pages.master_sheet import folha_mestre
 from pages.trend_chart import trend_chart
 from pages.reports import reports
+from pages.relatorio_final import relatorio_final
 
 # ========================== FUNÇÃO: CADASTRAR PEÇA ==========================
 def cadastrar_peca():
@@ -61,7 +62,7 @@ def cadastrar_peca():
 st.sidebar.title("Menu")
 opcao = st.sidebar.radio(
     "Escolha uma opção:",
-    ["Cadastrar Peça", "Gerenciar Relatórios", "Folha Mestre", "Trend Chart"]
+    ["Cadastrar Peça", "Gerenciar Relatórios", "Folha Mestre", "Trend Chart", "Relatório Final"]
 )
 
 if opcao == "Cadastrar Peça":
@@ -72,4 +73,6 @@ elif opcao == "Folha Mestre":
     folha_mestre()
 elif opcao == "Trend Chart":
     trend_chart()
+elif opcao == "Relatório Final":
+    relatorio_final()
 
