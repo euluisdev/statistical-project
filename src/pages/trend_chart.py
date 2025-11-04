@@ -79,42 +79,80 @@ def trend_chart():
                 st.info(f"Sem dados válidos para {pontoeixo}.")
                 continue
 
-            dados_ponto = dados_ponto.sort_values(by='DataHora')
+            dados_ponto['DataHora'] = pd.to_datetime(dados_ponto['DataHora'], errors='coerce')
+            dados_ponto = dados_ponto.dropna(subset=['DataHora']).sort_values(by='DataHora')
+
+    # Index sequencial para espaçamento fixo
+            x_pos = np.arange(len(dados_ponto))
+            x_labels = dados_ponto['DataHora'].dt.strftime("%d/%m %H:%M:%S")
+
+            valores = dados_ponto['Desvio'].values
 
             usl = dados_ponto['Tol+'].iloc[0]
-            lsl = -abs(dados_ponto['Tol-'].iloc[0])  
+            lsl = -abs(dados_ponto['Tol-'].iloc[0])
+            cp, cpk, media, desvio = calcular_cp_cpk(valores, lsl, usl)
 
-            x_nums = mdates.date2num(dados_ponto['DataHora'])
-            date_nums = mdates.date2num(sorted(dados_ponto['DataHora'].unique()))
+    # Limites de controle (3σ)
+            lsc = media + 3 * desvio
+            lic = media - 3 * desvio
 
-            fig, ax = plt.subplots(figsize=(12, 3))
+            fig = plt.figure(figsize=(12, 4))
+            gs = fig.add_gridspec(1, 2, width_ratios=[3, 1])
+            ax = fig.add_subplot(gs[0])
 
-            ax.plot(
-                x_nums,
-                dados_ponto['Desvio'],
-                marker='o',
-                linestyle='-',
-                linewidth=1.5,
-                label=pontoeixo
+    # 🔹 Gráfico com espaçamento fixo (0,1,2,3...)
+            ax.plot(x_pos, valores, marker='o', markersize=6, linewidth=2,
+                    color='#007ACC', markerfacecolor='white', markeredgecolor='#007ACC', label=pontoeixo)
+
+    # 🔹 Datas reais como labels
+            ax.set_xticks(x_pos)
+            ax.set_xticklabels(x_labels, rotation=45, ha='right')
+
+    # 🔹 Linhas horizontais
+            ax.axhline(usl, color="#FF3333", linestyle="--", linewidth=1, label='LSE')
+            ax.axhline(lsl, color="#FF3333", linestyle="--", linewidth=1, label='LIE')
+            ax.axhline(media, color='green', linewidth=2, label='AVERAGE')
+            ax.axhline(lsc, color='blue', linestyle='--', linewidth=1.5, label='LSC')
+            ax.axhline(lic, color='blue', linestyle='--', linewidth=1.5, label='LIC')
+
+            for spine in ['top', 'right', 'bottom']:  
+                ax.spines[spine].set_visible(False)
+            ax.spines['left'].set_visible(True)
+
+    # Visual
+            #ax.set_title(f"{pontoeixo}", fontsize=12, fontweight='bold')
+            ax.set_facecolor('white')
+            ax.set_ylim(min(lsl*1.2, lic*1.2), max(usl*1.2, lsc*1.2))
+            ax.legend(
+                loc='upper center',
+                bbox_to_anchor=(0.5, 1.25), 
+                ncol=5,                     
+                fontsize=10,
+                frameon=False
             )
 
-            ax.xaxis.set_major_locator(FixedLocator(date_nums))
-            ax.xaxis.set_major_formatter(mdates.DateFormatter("%d/%m %H:%M:%S"))
+        
+    # 🔹 TABELA de resultados ao lado (sem alterações)
+            ax2 = fig.add_subplot(gs[1])
+            ax2.axis('off')
+            tabela = [
+                ["CP", f"{cp:.2f}"], ["CPK", f"{cpk:.2f}"], ["AVERAGE", f"{media:.2f}"],
+                ["RANGE", f"{valores.max() - valores.min():.2f}"],
+                ["LSE", f"{usl:.2f}"], ["LIE", f"{lsl:.2f}"],
+                ["LSC", f"{lsc:.2f}"], ["LIC", f"{lic:.2f}"],
+            ]
+            tabela_plot = ax2.table(cellText=tabela, cellLoc='center', loc='center', colWidths=[0.4, 0.3])
+            tabela_plot.auto_set_font_size(False)
+            tabela_plot.set_fontsize(9)
+            for (i, j), cell in tabela_plot.get_celld().items():
+                cell.set_linewidth(0.6)
+                if j == 0:
+                    cell.set_text_props(fontweight='bold', color='black')
+                    cell.set_facecolor('#F8F8F8')
+                else:
+                    cell.set_facecolor('white')
 
-            # --- Linhas horizontais usando as tolerâncias automáticas ---
-            ax.axhline(usl, color="#FF3333", linestyle="--", linewidth=1, label=f"LSE ({usl:.3f})")
-            ax.axhline(lsl, color="#FF3333", linestyle="--", linewidth=1, label=f"LIE ({lsl:.3f})")
-            ax.axhline(0, color="#00FF66", linestyle="--", linewidth=1, label="Especificado")
-
-            ax.set_ylim(-1, 1)
-            ax.set_yticks([-1, -0.6, -0.3, 0, 0.3, 0.6, 1])
-            ax.set_xlim(date_nums[0], date_nums[-1])
-
-            plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
-            plt.tight_layout(pad=0.5)
-            ax.grid(False)
-            ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left')
-
+            plt.tight_layout(pad=1)
             st.pyplot(fig, use_container_width=True)
             st.markdown("<hr style='margin: 6px 0;'>", unsafe_allow_html=True)
 
