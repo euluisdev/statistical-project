@@ -24,7 +24,6 @@ def trend_chart():
     peca = st.session_state['peca_atual']
     df = st.session_state['df_peca'].copy()
 
-    # ========================== DATA E HORA ==========================
     if 'Data' in df.columns and 'Hora' in df.columns:
         df['DataHora'] = pd.to_datetime(
             df['Data'].astype(str).str.strip() + ' ' + df['Hora'].astype(str).str.strip(),
@@ -41,7 +40,6 @@ def trend_chart():
         st.error("❌ O DataFrame não contém colunas 'Data' e 'Hora'.")
         st.stop()
 
-    # ========================== CAMPOS BASE ==========================
     df['NomePonto'] = df['NomePonto'].astype(str)
     df['Eixo'] = df['Eixo'].astype(str)
     df['PontoEixo'] = df['NomePonto'] + " - " + df['Eixo']
@@ -49,7 +47,6 @@ def trend_chart():
     st.markdown(f"### Peça atual:")
     st.code(str(peca))
 
-    # ========================== SELECIONAR PONTOS ==========================
     st.subheader("Selecione um ponto para gerar o gráfico:")
     if not {'PontoEixo', 'NomePonto', 'Eixo', 'Desvio', 'Tol+', 'Tol-'}.issubset(df.columns):
         st.error("❌ O DataFrame precisa conter as colunas 'NomePonto', 'Eixo', 'Desvio', 'Tol+' e 'Tol-'.")
@@ -70,7 +67,6 @@ def trend_chart():
             st.warning("Nenhuma linha com Desvio e DataHora válidos para os pontos selecionados.")
             st.stop()
 
-        # ========================== GRÁFICOS POR PONTO ==========================
         st.subheader("Gráficos de Tendência")
 
         for pontoeixo in pontos_selecionados:
