@@ -5,7 +5,7 @@ from utils.parser_txt import ler_relatorio_pcdmis
 from pages.master_sheet import folha_mestre
 from pages.trend_chart import trend_chart
 from pages.reports import reports
-from pages.relatorio_final import relatorio_final
+from pages.relatorio_final import main as relatorio_final
 
 # ========================== FUNÇÃO: CADASTRAR PEÇA ==========================
 def cadastrar_peca():
