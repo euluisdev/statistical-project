@@ -1,7 +1,6 @@
 import streamlit as st
 from pathlib import Path
 
-# Caminhos relativos ajustados para estar DENTRO de src/pages/
 BASE_PATH = Path(__file__).resolve().parent.parent  # volta de /pages para /src
 
 def load_template():
