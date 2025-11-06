@@ -8,13 +8,19 @@
 </head>
 <body>
   <div class="header">
-    <h1>📄 Relatório Final</h1>
-    <p class="tiny">Ferramenta local (intranet). Os dados são salvos no <strong>localStorage</strong> do navegador. Para uso corporativo, guarde/backup o JSON exportado.</p>
+    <button id="deletePagina" class="btn ghost">Excluir Página</button>
+    <button id="moveUp" class="btn ghost">↑ Mover pra cima</button>
+    <button id="moveDown" class="btn ghost">↓ Mover pra baixo</button>
+    <select id="selectTrend" class="select"></select>
+    <button id="inserirImg" class="btn">Inserir imagem</button>
+    <button id="removerImg" class="btn ghost">Remover imagem</button>
+    <button id="exportAllPdf" class="btn">Exportar PDF</button>
+    <button id="exportPagePdf" class="btn ghost">Exportar Página</button>
   </div>
 
   <div class="container">
     <aside class="col-left">
-      <h2>🖼️ Miniaturas</h2>
+      <h2>SLIDES</h2>
       <div class="thumbs" id="thumbs"></div>
 
       <div class="controls">
@@ -27,23 +33,21 @@
           <button id="exportJsonBtn" class="btn ghost">Salvar JSON</button>
         </div>
         <div class="row">
-          <button id="exportAllPdf" class="btn">Exportar TODO em PDF</button>
-          <button id="exportPagePdf" class="btn ghost">Exportar Página</button>
+<!--           <button id="exportAllPdf" class="btn">Exportar TODO em PDF</button>
+          <button id="exportPagePdf" class="btn ghost">Exportar Página</button> -->
         </div>
-        <p class="tiny">Dica: faça upload de imagens na seção acima para adicioná-las às páginas.</p>
       </div>
     </aside>
 
     <main class="col-right">
-      <h2 id="pageTitle">📌 Página 1</h2>
+      <h2 id="pageTitle">Página 1</h2>
 
-      <label class="small">Anotações sobre a imagem:</label>
       <textarea id="pageText" placeholder="Escreva aqui..."></textarea>
 
       <div class="row" style="margin-top:8px;align-items:center">
-        <select id="selectTrend" class="select"></select>
-        <button id="inserirImg" class="btn">📌 Inserir imagem nesta página</button>
-        <button id="removerImg" class="btn ghost">Remover imagem</button>
+<!--         <select id="selectTrend" class="select"></select>
+        <button id="inserirImg" class="btn">Inserir imagem nesta página</button>
+        <button id="removerImg" class="btn ghost">Remover imagem</button> -->
       </div>
 
       <div class="img-wrap" id="imgWrap">
@@ -52,9 +56,6 @@
       </div>
 
       <div class="actions">
-        <button id="deletePagina" class="btn ghost">Excluir Página</button>
-        <button id="moveUp" class="btn ghost">↑ Mover pra cima</button>
-        <button id="moveDown" class="btn ghost">↓ Mover pra baixo</button>
         <div style="flex:1"></div>
         <div class="tiny muted" id="statusSave">Salvo localmente</div>
       </div>

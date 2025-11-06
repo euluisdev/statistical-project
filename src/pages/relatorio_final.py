@@ -8,6 +8,17 @@ JS_FILE   = BASE_DIR / "assets" / "js"   / "main.js"
 
 def relatorio_final():
     st.set_page_config(page_title="Relatório Final", layout="wide")
+    
+    st.markdown("""
+     <style>
+     .block-container {
+          padding-top: 2rem;
+          padding-bottom: 0rem;
+          padding-left: 0rem;
+          padding-right: 0rem;
+      }
+      </style>
+ """, unsafe_allow_html=True)
 
     with open(HTML_FILE, "r", encoding="utf-8") as f:
         html_content = f.read()
@@ -19,7 +30,7 @@ def relatorio_final():
         js_content = f"<script>{f.read()}</script>"
 
     st.components.v1.html(css_content + html_content + js_content,
-                         height=900, scrolling=True)
+                         height=1150, scrolling=True)
 
 if __name__ == "__main__":
     relatorio_final()
