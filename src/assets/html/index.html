@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Relatório Final — Página Única</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="header">
+    <h1>📄 Relatório Final</h1>
+    <p class="tiny">Ferramenta local (intranet). Os dados são salvos no <strong>localStorage</strong> do navegador. Para uso corporativo, guarde/backup o JSON exportado.</p>
+  </div>
+
+  <div class="container">
+    <aside class="col-left">
+      <h2>🖼️ Miniaturas</h2>
+      <div class="thumbs" id="thumbs"></div>
+
+      <div class="controls">
+        <button id="novaPagina" class="btn">➕ Criar nova página</button>
+        <div class="file-row">
+          <input id="uploadTrend" type="file" accept="image/*" multiple>
+        </div>
+        <div class="row">
+          <button id="importBtn" class="btn ghost">Importar/Exportar JSON</button>
+          <button id="exportJsonBtn" class="btn ghost">Salvar JSON</button>
+        </div>
+        <div class="row">
+          <button id="exportAllPdf" class="btn">Exportar TODO em PDF</button>
+          <button id="exportPagePdf" class="btn ghost">Exportar Página</button>
+        </div>
+        <p class="tiny">Dica: faça upload de imagens na seção acima para adicioná-las às páginas.</p>
+      </div>
+    </aside>
+
+    <main class="col-right">
+      <h2 id="pageTitle">📌 Página 1</h2>
+
+      <label class="small">Anotações sobre a imagem:</label>
+      <textarea id="pageText" placeholder="Escreva aqui..."></textarea>
+
+      <div class="row" style="margin-top:8px;align-items:center">
+        <select id="selectTrend" class="select"></select>
+        <button id="inserirImg" class="btn">📌 Inserir imagem nesta página</button>
+        <button id="removerImg" class="btn ghost">Remover imagem</button>
+      </div>
+
+      <div class="img-wrap" id="imgWrap">
+        <div class="muted" id="noImgMsg">Nenhuma imagem adicionada ainda.</div>
+        <img id="pageImage" src="" alt="" style="display:none">
+      </div>
+
+      <div class="actions">
+        <button id="deletePagina" class="btn ghost">Excluir Página</button>
+        <button id="moveUp" class="btn ghost">↑ Mover pra cima</button>
+        <button id="moveDown" class="btn ghost">↓ Mover pra baixo</button>
+        <div style="flex:1"></div>
+        <div class="tiny muted" id="statusSave">Salvo localmente</div>
+      </div>
+    </main>
+  </div>
+
+  <footer>euluisdev</footer>
+
+  <!-- Dependência para PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
