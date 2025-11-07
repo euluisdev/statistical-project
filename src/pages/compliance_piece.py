@@ -20,7 +20,7 @@ def compliance_piece():
     st.subheader(f"📌 Peça: {titulo} ({codigo})")
     st.success(f"✅ {len(df)} medições carregadas do dataframe.")
 
-    #2
+    # 2
     df["CG"] = (df["Desvio"].abs() / df["Tol+"].abs()) * 100
 
     if "NomePonto" not in df.columns:
@@ -38,10 +38,6 @@ def compliance_piece():
     perc_100 = round((cg_100 / total) * 100, 1)
     perc_acima = round((cg_acima / total) * 100, 1)
 
-    st.write(f"✅ **CG ≤ 75%:** {perc_75}% ({cg_75})")
-    st.write(f"🟡 **75% < CG ≤ 100%:** {perc_100}% ({cg_100})")
-    st.write(f"🔴 **CG > 100%:** {perc_acima}% ({cg_acima})")
-
     # 3
     pasta_historico = os.path.join(os.path.dirname(peca["PastaTXT"]), "historico")
     os.makedirs(pasta_historico, exist_ok=True)
@@ -49,16 +45,50 @@ def compliance_piece():
 
     grafico_placeholder = st.empty()
 
-    #4
+    # 4
     if os.path.exists(arquivo):
         historico = pd.read_csv(arquivo)
 
-        st.info("📂 Histórico encontrado. Mostrando gráfico acumulado:")
+        # 🔹 Ordena o histórico antes de exibir
+        historico = historico.sort_values(
+            by="Semana",
+            key=lambda x: x.astype(str).str.extract(r'(\d+)')[0].astype(float),
+            ascending=True
+        )
+
+        st.info("Histórico encontrado. Mostrando gráfico acumulado:")
 
         fig = go.Figure()
-        fig.add_trace(go.Bar(name="CG ≤ 75%", x=historico["Semana"], y=historico["CG<=75%"], marker_color="green"))
-        fig.add_trace(go.Bar(name="75% < CG ≤ 100%", x=historico["Semana"], y=historico["75%<CG<=100%"], marker_color="yellow"))
-        fig.add_trace(go.Bar(name="CG > 100%", x=historico["Semana"], y=historico["CG>100%"], marker_color="red"))
+        fig.add_trace(go.Bar(
+            name="CG ≤ 75%",
+            x=historico["Semana"],
+            y=historico["CG<=75%"],
+            marker_color="green",
+            text=[f"{cg_75}"] * len(historico),  
+            textposition="inside", 
+            insidetextanchor="middle",  
+            textfont=dict(color="black", size=12)
+        ))
+        fig.add_trace(go.Bar(
+            name="75% < CG ≤ 100%",
+            x=historico["Semana"],
+            y=historico["75%<CG<=100%"],
+            marker_color="yellow",
+            text=[f"{cg_100}"] * len(historico),
+            textposition="inside", 
+            insidetextanchor="middle",  
+            textfont=dict(color="black", size=12)
+        ))
+        fig.add_trace(go.Bar(
+            name="CG > 100%",
+            x=historico["Semana"],
+            y=historico["CG>100%"],
+            marker_color="red",
+            text=[f"{cg_acima}"] * len(historico),
+            textposition="inside", 
+            insidetextanchor="middle",  
+            textfont=dict(color="black", size=12)
+        ))
 
         fig.update_layout(
             barmode='stack',
@@ -66,8 +96,13 @@ def compliance_piece():
             xaxis_title="Semana",
             yaxis_title="Percentual (%)",
             template="plotly_white",
-            height=600
+            height=600,
+            xaxis=dict(
+                tickangle=45,
+                tickfont=dict(color="black")
+            )
         )
+
 
         with grafico_placeholder.container():
             st.plotly_chart(fig, use_container_width=True)
@@ -100,23 +135,61 @@ def compliance_piece():
         historico = historico[historico["Semana"] != semana]
         historico = pd.concat([historico, pd.DataFrame([nova_linha])], ignore_index=True)
 
-        
+        # 🔹 Ordena antes de salvar e exibir
+        historico["Semana"] = historico["Semana"].astype(str)
+        historico = historico.sort_values(
+            by="Semana",
+            key=lambda x: x.astype(str).str.extract(r'(\d+)')[0].astype(float),
+            ascending=True
+)
+
+
         historico.to_csv(arquivo, index=False)
 
         st.success(f"✅ Semana '{semana}' salva no histórico!")
 
         fig2 = go.Figure()
-        fig2.add_trace(go.Bar(name="CG ≤ 75%", x=historico["Semana"], y=historico["CG<=75%"], marker_color="green"))
-        fig2.add_trace(go.Bar(name="75% < CG ≤ 100%", x=historico["Semana"], y=historico["75%<CG<=100%"], marker_color="yellow"))
-        fig2.add_trace(go.Bar(name="CG > 100%", x=historico["Semana"], y=historico["CG>100%"], marker_color="red"))
+        fig2.add_trace(go.Bar(
+            name="CG ≤ 75%",
+            x=historico["Semana"],
+            y=historico["CG<=75%"],
+            marker_color="green",
+            text=[f"{cg_75}"] * len(historico), 
+            textposition="inside", 
+            insidetextanchor="middle",  
+            textfont=dict(color="black", size=12)
+        ))
+        fig2.add_trace(go.Bar(
+            name="75% < CG ≤ 100%",
+            x=historico["Semana"],
+            y=historico["75%<CG<=100%"],
+            marker_color="yellow",
+            text=[f"{cg_100}"] * len(historico),
+            textposition="inside", 
+            insidetextanchor="middle",  
+            textfont=dict(color="black", size=12)
+        ))
+        fig2.add_trace(go.Bar(
+            name="CG > 100%",
+            x=historico["Semana"],
+            y=historico["CG>100%"],
+            marker_color="red",
+            text=[f"{cg_acima}"] * len(historico),
+            textposition="inside", 
+            insidetextanchor="middle",  
+            textfont=dict(color="black", size=12)
+        ))
 
         fig2.update_layout(
             barmode='stack',
             title=f"CG - {codigo} - {titulo}",
-            xaxis_title="Semana",
-            yaxis_title="Percentual (%)",
+            yaxis_title="(%)",
             template="plotly_white",
-            height=600
+            height=700,
+            xaxis=dict(
+                tickangle=45,
+                tickfont=dict(color="black")
+            )
         )
 
         with grafico_placeholder.container():
