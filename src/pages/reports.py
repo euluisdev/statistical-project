@@ -14,8 +14,6 @@ def reports():
 
     base = pd.read_excel(base_path)
     base["PartNumber"] = base["PartNumber"].astype(str)
-
-    # --- Selecionar peça cadastrada (com botão Exibir) ---
     opcoes = base["PartNumber"].astype(str).tolist()
 
     if not opcoes:
