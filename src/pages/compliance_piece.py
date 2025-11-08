@@ -56,7 +56,7 @@ def compliance_piece():
     grafico_placeholder = st.empty()
 
     # 4
-    if os.path.exists(arquivo):
+    if os.path.exists(arquivo): 
         historico = pd.read_csv(arquivo)
         historico = historico.sort_values(
             by="Semana",
@@ -75,7 +75,7 @@ def compliance_piece():
             text=[f"{cg_75}"] * len(historico),  
             textposition="inside", 
             insidetextanchor="middle",  
-            textfont=dict(color="black", size=12)
+            textfont=dict(color="black", size=14)
         ))
         fig.add_trace(go.Bar(
             name="75% < CG ≤ 100%",
@@ -86,7 +86,7 @@ def compliance_piece():
             text=[f"{cg_100}"] * len(historico),
             textposition="inside", 
             insidetextanchor="middle",  
-            textfont=dict(color="black", size=12)
+            textfont=dict(color="black", size=14)
         ))
         fig.add_trace(go.Bar(
             name="CG > 100%",
@@ -97,7 +97,7 @@ def compliance_piece():
             text=[f"{cg_acima}"] * len(historico),
             textposition="inside", 
             insidetextanchor="middle",  
-            textfont=dict(color="white", size=12)
+            textfont=dict(color="white", size=14)
         ))
 
         fig.update_layout(
@@ -133,33 +133,46 @@ def compliance_piece():
         st.info("Nenhum histórico encontrado ainda.")
 
     # 5
-    semana = st.text_input("Informe a semana (ex: Week 45) e pressione Enter:")
+    anos_disponiveis = list(range(2023, datetime.now().year + 2))
+    col1, col2, col3 = st.columns([1, 1, 0.6])
 
-    if semana:
+    with col1:
+        ano_selecionado = st.selectbox("YEAR:", sorted(anos_disponiveis), index=anos_disponiveis.index(datetime.now().year))
+    with col2:
+        semanas_disponiveis = [f"Week {i}" for i in range(1, 53)]
+        semana_selecionada = st.selectbox("WEEK", semanas_disponiveis, index=datetime.now().isocalendar().week - 1)
+    with col3:
+        gerar = st.button("GERAR", use_container_width=True)
+
+    if gerar:
+        semana_chave = f"{ano_selecionado}-{semana_selecionada}"
+
         if os.path.exists(arquivo):
             historico = pd.read_csv(arquivo)
+            if "AnoSemana" not in historico.columns:
+                historico["AnoSemana"] = historico["Semana"].apply(lambda s: f"{datetime.now().year}-{s}")
         else:
-            historico = pd.DataFrame(columns=["Semana", "CG<=75%", "75%<CG<=100%", "CG>100%"])
+            historico = pd.DataFrame(columns=["AnoSemana", "Semana", "CG<=75%", "75%<CG<=100%", "CG>100%"])
 
         nova_linha = {
-            "Semana": semana,
+            "AnoSemana": semana_chave,
+            "Semana": semana_selecionada,
             "CG<=75%": perc_75,
             "75%<CG<=100%": perc_100,
             "CG>100%": perc_acima
         }
-
-        historico = historico[historico["Semana"] != semana]
+        historico = historico[historico["AnoSemana"] != semana_chave]
         historico = pd.concat([historico, pd.DataFrame([nova_linha])], ignore_index=True)
-        historico["Semana"] = historico["Semana"].astype(str)
+        historico["AnoSemana"] = historico["AnoSemana"].astype(str)
         historico = historico.sort_values(
-            by="Semana",
-            key=lambda x: x.astype(str).str.extract(r'(\d+)')[0].astype(float),
+            by="AnoSemana",
+            key=lambda x: x.str.extract(r'(\d+)-Week (\d+)').astype(float).apply(tuple, axis=1),
             ascending=True
         )
 
         historico.to_csv(arquivo, index=False)
 
-        st.success(f"✅ Semana '{semana}' salva no histórico!")
+        st.success(f"✅ Semana '{semana_selecionada}' de {ano_selecionado} salva no histórico!")
 
         fig2 = go.Figure()
         fig2.add_trace(go.Bar(
@@ -168,21 +181,21 @@ def compliance_piece():
             y=historico["CG<=75%"],
             marker_color="green", 
             width=[0.5]*len(historico),
-            text=[f"{cg_75}"] * len(historico), 
-            textposition="inside", 
-            insidetextanchor="middle",  
-            textfont=dict(color="black", size=12)
+            text=[f"{cg_75}"] * len(historico),
+            textposition="inside",
+            insidetextanchor="middle",
+            textfont=dict(color="black", size=14)
         ))
         fig2.add_trace(go.Bar(
             name="75% < CG ≤ 100%",
             x=historico["Semana"],
             y=historico["75%<CG<=100%"],
-            marker_color="yellow", 
+            marker_color="yellow",
             width=[0.5]*len(historico),
             text=[f"{cg_100}"] * len(historico),
-            textposition="inside", 
-            insidetextanchor="middle",  
-            textfont=dict(color="black", size=12)
+            textposition="inside",
+            insidetextanchor="middle",
+            textfont=dict(color="black", size=14)
         ))
         fig2.add_trace(go.Bar(
             name="CG > 100%",
@@ -191,28 +204,29 @@ def compliance_piece():
             marker_color="red", 
             width=[0.5]*len(historico),
             text=[f"{cg_acima}"] * len(historico),
-            textposition="inside", 
-            insidetextanchor="middle",  
-            textfont=dict(color="white", size=12)
+            textposition="inside",
+            insidetextanchor="middle",
+            textfont=dict(color="white", size=14)
         ))
 
         fig2.update_layout(
             barmode='stack',
             title=f"CG - {codigo} - {titulo}",
-            yaxis_title="(%)",
+            xaxis_title="",
+            yaxis_title="%",
             template="plotly_white",
             height=700,
             xaxis=dict(
                 tickangle=45,
                 tickfont=dict(color="black")
-            ), 
+            ),
             legend=dict(
-                orientation="h",   
+                orientation="h",
                 yanchor="bottom",
-                y=-0.2,            
-                xanchor="center", 
-                x=0.5              
-            ), 
+                y=-0.2,
+                xanchor="center",
+                x=0.5
+            ),
         )
 
         with grafico_placeholder.container():
