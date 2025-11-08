@@ -56,10 +56,7 @@ def cadastrar_peca():
         st.success(f"✅ Peça '{nome}' cadastrada com sucesso!")
 
 
-# ========================== FUNÇÃO: GERENCIAR RELATÓRIOS ==========================
-
-
-
+#GERENCIAR RELATÓRIOS
 st.sidebar.title("Menu")
 opcao = st.sidebar.radio(
     "Escolha uma opção:",

@@ -2,9 +2,21 @@ import os
 import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
+from datetime import datetime
 
 def compliance_piece():
-    st.title("📊 Relatório CG por Semana")
+    st.title("CONFORMIDADE GERAL POR PEÇA")
+    st.set_page_config(page_title="CG POR PEÇA", layout="wide")
+    st.markdown("""
+     <style>
+     .block-container {
+          padding-top: 2rem;
+          padding-bottom: 1rem;
+          padding-left: 1rem;
+          padding-right: 1rem;
+      }
+      </style>
+ """, unsafe_allow_html=True)
 
     # 1
     if 'peca_atual' not in st.session_state or 'df_peca' not in st.session_state:
@@ -16,8 +28,6 @@ def compliance_piece():
 
     titulo = peca.get("Nome", "")
     codigo = str(peca.get("PartNumber", ""))
-
-    st.subheader(f"📌 Peça: {titulo} ({codigo})")
     st.success(f"✅ {len(df)} medições carregadas do dataframe.")
 
     # 2
@@ -48,14 +58,11 @@ def compliance_piece():
     # 4
     if os.path.exists(arquivo):
         historico = pd.read_csv(arquivo)
-
-        # 🔹 Ordena o histórico antes de exibir
         historico = historico.sort_values(
             by="Semana",
             key=lambda x: x.astype(str).str.extract(r'(\d+)')[0].astype(float),
             ascending=True
         )
-
         st.info("Histórico encontrado. Mostrando gráfico acumulado:")
 
         fig = go.Figure()
@@ -63,7 +70,8 @@ def compliance_piece():
             name="CG ≤ 75%",
             x=historico["Semana"],
             y=historico["CG<=75%"],
-            marker_color="green",
+            marker_color="green", 
+            width=[0.5]*len(historico),
             text=[f"{cg_75}"] * len(historico),  
             textposition="inside", 
             insidetextanchor="middle",  
@@ -74,6 +82,7 @@ def compliance_piece():
             x=historico["Semana"],
             y=historico["75%<CG<=100%"],
             marker_color="yellow",
+            width=[0.5]*len(historico),
             text=[f"{cg_100}"] * len(historico),
             textposition="inside", 
             insidetextanchor="middle",  
@@ -83,41 +92,48 @@ def compliance_piece():
             name="CG > 100%",
             x=historico["Semana"],
             y=historico["CG>100%"],
-            marker_color="red",
+            marker_color="red", 
+            width=[0.5]*len(historico),
             text=[f"{cg_acima}"] * len(historico),
             textposition="inside", 
             insidetextanchor="middle",  
-            textfont=dict(color="black", size=12)
+            textfont=dict(color="white", size=12)
         ))
 
         fig.update_layout(
             barmode='stack',
             title=f"CG - {codigo} - {titulo}",
-            xaxis_title="Semana",
-            yaxis_title="Percentual (%)",
+            xaxis_title="",
+            yaxis_title="%",
             template="plotly_white",
-            height=600,
+            height=700,
             xaxis=dict(
                 tickangle=45,
                 tickfont=dict(color="black")
-            )
+            ), 
+            legend=dict(
+                orientation="h",   
+                yanchor="bottom",
+                y=-0.2,            
+                xanchor="center", 
+                x=0.5              
+            ), 
         )
-
 
         with grafico_placeholder.container():
             st.plotly_chart(fig, use_container_width=True)
             st.download_button(
-                label="💾 Baixar histórico CSV",
+                label="Baixar histórico CSV",
                 data=historico.to_csv(index=False).encode('utf-8'),
                 file_name=f"historico_{codigo}.csv",
                 mime="text/csv",
                 key=f"download_{codigo}"
             )
     else:
-        st.info("📂 Nenhum histórico encontrado ainda.")
+        st.info("Nenhum histórico encontrado ainda.")
 
     # 5
-    semana = st.text_input("📅 Informe a semana (ex: 45) e pressione Enter:")
+    semana = st.text_input("Informe a semana (ex: Week 45) e pressione Enter:")
 
     if semana:
         if os.path.exists(arquivo):
@@ -134,15 +150,12 @@ def compliance_piece():
 
         historico = historico[historico["Semana"] != semana]
         historico = pd.concat([historico, pd.DataFrame([nova_linha])], ignore_index=True)
-
-        # 🔹 Ordena antes de salvar e exibir
         historico["Semana"] = historico["Semana"].astype(str)
         historico = historico.sort_values(
             by="Semana",
             key=lambda x: x.astype(str).str.extract(r'(\d+)')[0].astype(float),
             ascending=True
-)
-
+        )
 
         historico.to_csv(arquivo, index=False)
 
@@ -153,7 +166,8 @@ def compliance_piece():
             name="CG ≤ 75%",
             x=historico["Semana"],
             y=historico["CG<=75%"],
-            marker_color="green",
+            marker_color="green", 
+            width=[0.5]*len(historico),
             text=[f"{cg_75}"] * len(historico), 
             textposition="inside", 
             insidetextanchor="middle",  
@@ -163,7 +177,8 @@ def compliance_piece():
             name="75% < CG ≤ 100%",
             x=historico["Semana"],
             y=historico["75%<CG<=100%"],
-            marker_color="yellow",
+            marker_color="yellow", 
+            width=[0.5]*len(historico),
             text=[f"{cg_100}"] * len(historico),
             textposition="inside", 
             insidetextanchor="middle",  
@@ -173,11 +188,12 @@ def compliance_piece():
             name="CG > 100%",
             x=historico["Semana"],
             y=historico["CG>100%"],
-            marker_color="red",
+            marker_color="red", 
+            width=[0.5]*len(historico),
             text=[f"{cg_acima}"] * len(historico),
             textposition="inside", 
             insidetextanchor="middle",  
-            textfont=dict(color="black", size=12)
+            textfont=dict(color="white", size=12)
         ))
 
         fig2.update_layout(
@@ -189,13 +205,20 @@ def compliance_piece():
             xaxis=dict(
                 tickangle=45,
                 tickfont=dict(color="black")
-            )
+            ), 
+            legend=dict(
+                orientation="h",   
+                yanchor="bottom",
+                y=-0.2,            
+                xanchor="center", 
+                x=0.5              
+            ), 
         )
 
         with grafico_placeholder.container():
             st.plotly_chart(fig2, use_container_width=True)
             st.download_button(
-                label="💾 Baixar histórico CSV",
+                label="Baixar histórico CSV",
                 data=historico.to_csv(index=False).encode('utf-8'),
                 file_name=f"historico_{codigo}.csv",
                 mime="text/csv",
