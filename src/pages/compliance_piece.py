@@ -28,7 +28,7 @@ def compliance_piece():
 
     titulo = peca.get("Nome", "")
     codigo = str(peca.get("PartNumber", ""))
-    st.success(f"✅ {len(df)} medições carregadas do dataframe.")
+    st.success(f"✅ {df['NomePonto'].nunique()} pontos únicos carregados do dataframe.")
 
     # 2
     df["CG"] = (df["Desvio"].abs() / df["Tol+"].abs()) * 100
@@ -52,6 +52,24 @@ def compliance_piece():
     pasta_historico = os.path.join(os.path.dirname(peca["PastaTXT"]), "historico")
     os.makedirs(pasta_historico, exist_ok=True)
     arquivo = os.path.join(pasta_historico, f"historico_{codigo}.csv")
+    
+    #btm
+    
+    if "gerar" not in st.session_state:
+        st.session_state.gerar = False 
+    
+    
+    anos_disponiveis = list(range(2023, datetime.now().year + 2))
+    col1, col2, col3 = st.columns([1, 1, 0.6])
+
+    with col1:
+        ano_selecionado = st.selectbox("YEAR:", sorted(anos_disponiveis), index=anos_disponiveis.index(datetime.now().year))
+    with col2:
+        semanas_disponiveis = [f"Week {i}" for i in range(1, 53)]
+        semana_selecionada = st.selectbox("WEEK", semanas_disponiveis, index=datetime.now().isocalendar().week - 1)
+    with col3:
+        if st.button("GERAR", use_container_width=True):
+            st.session_state.gerar = True
 
     grafico_placeholder = st.empty()
 
@@ -59,8 +77,8 @@ def compliance_piece():
     if os.path.exists(arquivo): 
         historico = pd.read_csv(arquivo)
         historico = historico.sort_values(
-            by="Semana",
-            key=lambda x: x.astype(str).str.extract(r'(\d+)')[0].astype(float),
+            by="AnoSemana",
+            key=lambda x: x.str.extract(r'(\d+)-Week (\d+)').astype(float).apply(tuple, axis=1),
             ascending=True
         )
         st.info("Histórico encontrado. Mostrando gráfico acumulado:")
@@ -133,18 +151,7 @@ def compliance_piece():
         st.info("Nenhum histórico encontrado ainda.")
 
     # 5
-    anos_disponiveis = list(range(2023, datetime.now().year + 2))
-    col1, col2, col3 = st.columns([1, 1, 0.6])
-
-    with col1:
-        ano_selecionado = st.selectbox("YEAR:", sorted(anos_disponiveis), index=anos_disponiveis.index(datetime.now().year))
-    with col2:
-        semanas_disponiveis = [f"Week {i}" for i in range(1, 53)]
-        semana_selecionada = st.selectbox("WEEK", semanas_disponiveis, index=datetime.now().isocalendar().week - 1)
-    with col3:
-        gerar = st.button("GERAR", use_container_width=True)
-
-    if gerar:
+    if "gerar" in st.session_state and st.session_state.gerar:
         semana_chave = f"{ano_selecionado}-{semana_selecionada}"
 
         if os.path.exists(arquivo):
@@ -228,13 +235,4 @@ def compliance_piece():
                 x=0.5
             ),
         )
-
-        with grafico_placeholder.container():
-            st.plotly_chart(fig2, use_container_width=True)
-            st.download_button(
-                label="Baixar histórico CSV",
-                data=historico.to_csv(index=False).encode('utf-8'),
-                file_name=f"historico_{codigo}.csv",
-                mime="text/csv",
-                key=f"download_{codigo}_novo"
-            )
+        st.session_state.gerar = False
