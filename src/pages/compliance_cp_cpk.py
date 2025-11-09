@@ -19,7 +19,7 @@ def compliance_cp_cpk():
       </style>
     """, unsafe_allow_html=True)
 
-    # 1. Verificar se há peça carregada
+    #1
     if 'peca_atual' not in st.session_state or 'df_peca' not in st.session_state:
         st.warning("❗ Vá para 'Gerenciar Relatórios' e carregue uma peça primeiro.")
         return
@@ -30,43 +30,37 @@ def compliance_cp_cpk():
     titulo = peca.get("Nome", "")
     codigo = str(peca.get("PartNumber", ""))
 
-    # 2. Calcular CP e CPK
+    # 2
     if "NomePonto" not in df.columns:
         st.error("❌ Coluna 'NomePonto' não encontrada no dataframe.")
         return
 
-    # Criar identificador único do ponto
     if "Eixo" in df.columns:
         df["PontoEixo"] = df["NomePonto"].astype(str) + " - " + df["Eixo"].astype(str)
     else:
         df["PontoEixo"] = df["NomePonto"].astype(str)
 
-    # Calcular CP e CPK por ponto
     resultados_cp = []
     resultados_cpk = []
     
     for ponto in df["PontoEixo"].unique():
         df_ponto = df[df["PontoEixo"] == ponto]
         
-        # Obter tolerâncias (assumindo que são simétricas)
         tol_sup = df_ponto["Tol+"].iloc[0]
         tol_inf = df_ponto["Tol-"].iloc[0]
         nominal = df_ponto["Nominal"].iloc[0]
         
-        # Calcular desvio padrão
         desvios = df_ponto["Desvio"]
         std_dev = desvios.std()
         media = desvios.mean()
         
-        # Calcular CP (Capacidade do Processo)
-        # CP = (Tolerância Superior - Tolerância Inferior) / (6 * Desvio Padrão)
+        #calculo cp
         tolerancia_total = abs(tol_sup - tol_inf)
         cp = tolerancia_total / (6 * std_dev) if std_dev > 0 else 0
         
-        # Calcular CPK (Índice de Capacidade do Processo)
-        # CPK = min[(LSL - média) / (3 * σ), (média - LIL) / (3 * σ)]
-        lsl = nominal + tol_inf  # Limite Inferior
-        usl = nominal + tol_sup  # Limite Superior
+        #calculo cpk
+        lsl = nominal + tol_inf  
+        usl = nominal + tol_sup  
         valor_medio = nominal + media
         
         cpk_superior = (usl - valor_medio) / (3 * std_dev) if std_dev > 0 else 0
@@ -81,7 +75,7 @@ def compliance_cp_cpk():
     
     st.success(f"✅ {len(df_cp)} pontos únicos calculados.")
 
-    # 3. Calcular estatísticas para CP
+    #3
     total = len(df_cp)
     cp_133_acima = len(df_cp[df_cp["CP"] >= 1.33])
     cp_100_133 = len(df_cp[(df_cp["CP"] >= 1.0) & (df_cp["CP"] < 1.33)])
@@ -91,7 +85,6 @@ def compliance_cp_cpk():
     perc_cp_100_133 = round((cp_100_133 / total) * 100, 1)
     perc_cp_100_abaixo = round((cp_100_abaixo / total) * 100, 1)
 
-    # Calcular estatísticas para CPK
     cpk_133_acima = len(df_cpk[df_cpk["CPK"] >= 1.33])
     cpk_100_133 = len(df_cpk[(df_cpk["CPK"] >= 1.0) & (df_cpk["CPK"] < 1.33)])
     cpk_100_abaixo = len(df_cpk[df_cpk["CPK"] < 1.0])
@@ -100,7 +93,7 @@ def compliance_cp_cpk():
     perc_cpk_100_133 = round((cpk_100_133 / total) * 100, 1)
     perc_cpk_100_abaixo = round((cpk_100_abaixo / total) * 100, 1)
 
-    # 4. Configurar histórico
+    #4
     pasta_historico = os.path.join(os.path.dirname(peca["PastaTXT"]), "historico")
     os.makedirs(pasta_historico, exist_ok=True)
     arquivo_cp = os.path.join(pasta_historico, f"historico_cp_{codigo}.csv")
@@ -120,7 +113,6 @@ def compliance_cp_cpk():
         if st.button("GERAR", use_container_width=True):
             semana_chave = f"{ano_selecionado}-{semana_selecionada}"
             
-            # Salvar histórico CP
             if os.path.exists(arquivo_cp):
                 historico_cp = pd.read_csv(arquivo_cp)
             else:
@@ -144,7 +136,6 @@ def compliance_cp_cpk():
             ).tail(22).reset_index(drop=True)
             historico_cp.to_csv(arquivo_cp, index=False)
             
-            # Salvar histórico CPK
             if os.path.exists(arquivo_cpk):
                 historico_cpk = pd.read_csv(arquivo_cpk)
             else:
@@ -171,7 +162,7 @@ def compliance_cp_cpk():
             st.success(f"✅ Semana '{semana_selecionada}' de {ano_selecionado} salva no histórico!")
             st.rerun()
 
-    # 5. Exibir gráficos
+    # 5show chart
     if os.path.exists(arquivo_cp):
         historico_cp = pd.read_csv(arquivo_cp)
     else:
@@ -182,7 +173,6 @@ def compliance_cp_cpk():
     else:
         historico_cpk = pd.DataFrame(columns=["AnoSemana", "Semana", "CPK>=1.33", "1<=CPK<1.33", "CPK<1"])
 
-    # Gráfico CP
     if not historico_cp.empty:
         texto_verde_cp = []
         texto_amarelo_cp = []
@@ -252,7 +242,6 @@ def compliance_cp_cpk():
 
         st.plotly_chart(fig_cp, use_container_width=True)
 
-    # Gráfico CPK
     if not historico_cpk.empty:
         texto_verde_cpk = []
         texto_amarelo_cpk = []
@@ -322,7 +311,6 @@ def compliance_cp_cpk():
 
         st.plotly_chart(fig_cpk, use_container_width=True)
         
-        # Botões de download
         col1, col2 = st.columns(2)
         with col1:
             st.download_button(
