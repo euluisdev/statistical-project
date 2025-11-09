@@ -7,6 +7,7 @@ from pages.trend_chart import trend_chart
 from pages.reports import reports
 from pages.relatorio_final import relatorio_final
 from pages.compliance_piece import compliance_piece
+from pages.compliance_cp_cpk import compliance_cp_cpk
 
 # ========================== FUNÇÃO: CADASTRAR PEÇA ==========================
 def cadastrar_peca():
@@ -60,7 +61,7 @@ def cadastrar_peca():
 st.sidebar.title("Menu")
 opcao = st.sidebar.radio(
     "Escolha uma opção:",
-    ["Cadastrar Peça", "Gerenciar Relatórios", "Folha Mestre", "Trend Chart", "Relatório Final", "Conformidade Peça"]
+    ["Cadastrar Peça", "Gerenciar Relatórios", "Folha Mestre", "Trend Chart", "Relatório Final", "Conformidade Peça", "CP / CPK PEÇA"]
 )
 
 if opcao == "Cadastrar Peça":
@@ -75,4 +76,6 @@ elif opcao == "Relatório Final":
     relatorio_final()
 elif opcao == "Conformidade Peça":
     compliance_piece()
+elif opcao == "CP / CPK PEÇA":
+    compliance_cp_cpk()
 

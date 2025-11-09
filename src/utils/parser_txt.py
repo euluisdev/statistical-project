@@ -48,7 +48,7 @@ def ler_relatorio_pcdmis(caminho_arquivo):
 
             continue
 
-        if re.match(r"^[XYZDT]\s", linha):
+        if re.match(r"^[XYZDTM]\s", linha):
             partes = linha.split()
             if len(partes) >= 6:
                 eixo = partes[0]
