@@ -16,8 +16,9 @@ def calcular_cp_cpk(valores, lsl, usl):
     cpk = min((usl - media), (media - lsl)) / (3 * desvio)
     return cp, cpk, media, desvio
 
+#1
 def trend_chart():
-    st.title("📈 Trend Chart - Controle Estatístico")
+    st.title("CONTROLE ESTATÍSTICO - TREND CHART")
 
     if 'df_peca' not in st.session_state or 'peca_atual' not in st.session_state:
         st.warning("⚠️ Nenhuma peça carregada. Volte e carregue uma peça primeiro.")
@@ -42,6 +43,7 @@ def trend_chart():
         st.error("❌ O DataFrame não contém colunas 'Data' e 'Hora'.")
         st.stop()
 
+    #2
     df['NomePonto'] = df['NomePonto'].astype(str)
     df['Eixo'] = df['Eixo'].astype(str)
     df['PontoEixo'] = df['NomePonto'] + " - " + df['Eixo']
@@ -81,7 +83,6 @@ def trend_chart():
             dados_ponto['DataHora'] = pd.to_datetime(dados_ponto['DataHora'], errors='coerce')
             dados_ponto = dados_ponto.dropna(subset=['DataHora']).sort_values(by='DataHora')
 
-    # Index sequencial para espaçamento fixo
             x_pos = np.arange(len(dados_ponto))
             x_labels = dados_ponto['DataHora'].dt.strftime("%d/%m %H:%M:%S")
 
@@ -91,7 +92,6 @@ def trend_chart():
             lsl = -abs(dados_ponto['Tol-'].iloc[0])
             cp, cpk, media, desvio = calcular_cp_cpk(valores, lsl, usl)
 
-    #Limites de controle (3σ)
             lsc = media + 3 * desvio
             lic = media - 3 * desvio
 
@@ -99,15 +99,12 @@ def trend_chart():
             gs = fig.add_gridspec(1, 2, width_ratios=[3, 1])
             ax = fig.add_subplot(gs[0])
 
-    # espaçamento fixo 
             ax.plot(x_pos, valores, marker='o', markersize=6, linewidth=2,
                     color='#007ACC', markerfacecolor='white', markeredgecolor='#007ACC', label=pontoeixo)
 
-    #Datas reais como labels
             ax.set_xticks(x_pos)
             ax.set_xticklabels(x_labels, rotation=45, ha='right')
 
-    #Linhas horizontais
             ax.axhline(usl, color="#FF3333", linestyle="--", linewidth=1, label='LSE')
             ax.axhline(lsl, color="#FF3333", linestyle="--", linewidth=1, label='LIE')
             ax.axhline(media, color='green', linewidth=2, label='AVERAGE')
@@ -118,8 +115,6 @@ def trend_chart():
                 ax.spines[spine].set_visible(False)
             ax.spines['left'].set_visible(True)
 
-    # Visual
-            #ax.set_title(f"{pontoeixo}", fontsize=12, fontweight='bold')
             ax.set_facecolor('white')
             ax.set_ylim(min(lsl*1.2, lic*1.2), max(usl*1.2, lsc*1.2))
             ax.legend(
@@ -130,8 +125,7 @@ def trend_chart():
                 frameon=False
             )
 
-        
-    #resultados ao lado
+            #3
             ax2 = fig.add_subplot(gs[1])
             ax2.axis('off')
             tabela = [
@@ -154,10 +148,10 @@ def trend_chart():
             plt.tight_layout(pad=1)
             st.pyplot(fig, use_container_width=True)
             
-            
             figuras_geradas.append((pontoeixo, fig))
+
             
-        if figuras_geradas and st.button("💾 Salvar todos os gráficos selecionados"):  # ✅
+        if figuras_geradas and st.button("Salvar os gráficos selecionados"): 
             pasta = "trend_images"
             os.makedirs(pasta, exist_ok=True)
 
@@ -188,8 +182,6 @@ def trend_chart():
             usl = dados_ponto['Tol+'].iloc[0]
             lsl = -abs(dados_ponto['Tol-'].iloc[0])
             valores = dados_ponto['Desvio'].dropna().values
-
-            #nomep, eixo = pontoeixo.rsplit(" - ", 1)
             cp, cpk, media, desvio = calcular_cp_cpk(valores, lsl, usl)
 
             resultados.append([
@@ -206,11 +198,11 @@ def trend_chart():
             if pd.isna(val):
                 return ''
             if val >= 1.33:
-                return 'background-color: #00FF66'  # verde
+                return 'background-color: #00FF66'
             elif val >= 1.0:
-                return 'background-color: #FFFF33'  # amarelo
+                return 'background-color: #FFFF33' 
             else:
-                return 'background-color: #FF3333'  # vermelho
+                return 'background-color: #FF3333'
 
         st.dataframe(df_result.style.map(cor_cpk, subset=['Cp', 'Cpk']), use_container_width=True)
 

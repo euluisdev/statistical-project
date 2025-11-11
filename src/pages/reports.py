@@ -5,7 +5,7 @@ from utils.parser_txt import ler_relatorio_pcdmis
 
 
 def reports():
-    st.title("⚙️ Gerenciar Reports")
+    st.title("GERENCIAR REPORTS")
 
     base_path = "dados/base_pecas.xlsx"
     if not os.path.exists(base_path):
@@ -37,14 +37,12 @@ def reports():
             else:
                 st.warning("Escolha uma peça válida antes de exibir.")
 
-    # Recupera a seleção atual (caso já tenha sido exibida antes)
     part_number = st.session_state.get("part_number_selected", None)
 
     if not part_number:
-        st.info("👆 Escolha uma peça e clique em 'Exibir' para continuar.")
+        st.info("Selecione uma peça e clique em 'Exibir' para continuar.")
         return
 
-    # --- Carrega dados da peça selecionada ---
     peca = base.loc[base["PartNumber"] == str(part_number)]
     if peca.empty:
         st.warning("Peça não encontrada.")
@@ -56,7 +54,6 @@ def reports():
 
     st.subheader(f"📄 {peca['Nome']} ({peca['PartNumber']}) - {peca['Modelo']}")
 
-    # --- Lista relatórios ---
     arquivos = os.listdir(pasta_txt)
     if arquivos:
         st.write("Relatórios armazenados:")
@@ -64,7 +61,6 @@ def reports():
     else:
         st.info("Nenhum relatório importado ainda.")
 
-    # ---------- Upload e exclusão de relatórios ----------
     col1, col2 = st.columns([1, 2])
 
     with col1:
@@ -101,7 +97,6 @@ def reports():
         else:
             st.info("Nenhum relatório disponível para exclusão.")
 
-    # ====================== EXTRAÇÃO DE DADOS ======================
     st.divider()
     st.subheader("📈 Extrair Dados dos Relatórios TXT")
 
