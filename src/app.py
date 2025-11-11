@@ -79,3 +79,4 @@ elif opcao == "Conformidade Peça":
 elif opcao == "CP / CPK PEÇA":
     compliance_cp_cpk()
 
+
