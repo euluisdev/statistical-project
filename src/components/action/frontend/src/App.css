@@ -113,7 +113,7 @@ body {
 
 
 
-/* ============== MODAL ============== */
+/*MODAL*/
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -212,7 +212,7 @@ body {
   padding: 3px 5px;
 }
 
-/* Form elements */
+/*form elements */
 .form-group {
   margin-bottom: 8px;
 }
@@ -266,15 +266,38 @@ body {
   border: 1px solid #990000;
   padding: 8px;
   min-height: 100px;
+  max-height: 200px;
+  overflow-y: auto;  
   margin: 8px 0;
   color: white;
   font-weight: bold;
   font-size: 11px;
 }
 
+.points-box::-webkit-scrollbar {
+  width: 8px;
+}
+
+.points-box::-webkit-scrollbar-track {
+  background: #990000;
+}
+
+.points-box::-webkit-scrollbar-thumb {
+  background: #ffffff;
+  border-radius: 4px;
+}
+
+.points-box::-webkit-scrollbar-thumb:hover {
+  background: #cccccc;
+}
+
 .point-item {
   padding: 2px;
   margin-bottom: 1px;
+    transition: background-color 0.2s;
+}
+.point-item.selected {
+  background: #0066cc;
 }
 
 .scroll-buttons {

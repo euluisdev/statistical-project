@@ -6,18 +6,38 @@ function App() {
   const [selectedYear, setSelectedYear] = useState(2025);
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pontos, setPontos] = useState([]);
+  const [selectedPoints, setSelectedPoints] = useState([]);
+  const [dadosPorPonto, setDadosPorPonto] = useState({});
 
   useEffect(() => {
     Streamlit.setComponentReady();
     Streamlit.setFrameHeight(900);
-  }, []);
 
-  useEffect(() => {
-  if (window.STREAMLIT_DATA) {
-    setPontos(window.STREAMLIT_DATA.pontos || []);
-    console.log('✅ Pontos:', window.STREAMLIT_DATA.pontos);
-  }
-}, []);
+    //listner receber dados st
+    window.addEventListener("message", (event) => {
+      const data = event.data;
+      
+      //mensagem com args?
+      if (data.type === "streamlit:render" && data.args) {
+        console.log("Recebi args do streamlit:", data.args);
+        
+        if (data.args.pontos) {
+          setPontos(data.args.pontos);
+        }
+        if (data.args.dados_por_ponto) {
+          setDadosPorPonto(data.args.dados_por_ponto);
+        }
+      }
+    });
+
+    //fallback
+    if (window.STREAMLIT_DATA) {
+      console.log("Usando window.STREAMLIT_DATA:", window.STREAMLIT_DATA);
+      setPontos(window.STREAMLIT_DATA.pontos || []);
+      setDadosPorPonto(window.STREAMLIT_DATA.dadosPorPonto || {});
+    }
+  }, []);
 
   const getWeeksRange = (startWeek) => {
     const weeks = [];
@@ -40,9 +60,16 @@ function App() {
     setSelectedYear(parseInt(e.target.value));
   };
 
+  const togglePoint = (ponto) => {
+    setSelectedPoints(prev => 
+      prev.includes(ponto) 
+        ? prev.filter(p => p !== ponto)
+        : [...prev, ponto]
+    );
+  };
   return (
     <div className="app-container">
-      {/* toolbar */}
+      {/*toolbar */}
       <div className="toolbar">
         <select value={selectedYear} onChange={handleYearChange} className="select-year">
           <option value={2024}>Year 2024</option>
@@ -139,7 +166,7 @@ function App() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="modal-header">
-              <h3>AutoMarb - Action Plan</h3>
+              <h3>Action Plan</h3>
               <button className="modal-close" onClick={() => setIsModalOpen(false)}>×</button>
             </div>
 
@@ -166,17 +193,47 @@ function App() {
                   <div className="filter-group">
                     <select className="filter-select">
                       <option>Conformity</option>
+                      <option>CPK</option>
                     </select>
                     <select className="filter-select">
                       <option>Red</option>
+                      <option>Yellow</option>
                     </select>
                   </div>
                 </div>
 
+                {/*pnt dinamicos */}
                 <div className="points-box">
-                  <div className="point-item">PT 231</div>
-                  <div className="point-item">PT 92T</div>
+                  {pontos.length > 0 ? (
+                    pontos.map((ponto, idx) => (
+                      <div 
+                        key={idx}
+                        className={`point-item ${selectedPoints.includes(ponto) ? 'selected' : ''}`}
+                        onClick={() => togglePoint(ponto)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {ponto}
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ opacity: 0.7, fontStyle: 'italic' }}>
+                      Nenhum ponto carregado
+                    </div>
+                  )}
                 </div>
+
+                <div className="scroll-buttons">
+                  <button className="btn-scroll">&gt;</button>
+                  <button className="btn-scroll">&lt;</button>
+                </div>
+
+                <label className="checkbox-label">
+                  <input type="checkbox" defaultChecked />
+                  Somente pontos cálculo
+                </label>
+
+                {/*contador */}
+                <div className="number-display">{selectedPoints.length}</div>
 
                 <div className="scroll-buttons">
                   <button className="btn-scroll">&gt;</button>
@@ -236,13 +293,13 @@ function App() {
                 </div>
               </div>
 
-              {/*3 responsabilidade */}
+              {/*3responsabilidade */}
               <div className="modal-section">
                 <h4>Responsabilidade</h4>
 
                 <div className="form-group">
                   <div className="name-control">
-                    <div className="name-box">EVERTON VALERIO (FERRAMENTARIA)</div>
+                    <div className="name-box">EVERTON (FERRAMENTARIA)</div>
                     <div className="nav-buttons">
                       <button className="btn-nav">&gt;</button>
                       <button className="btn-nav">&lt;</button>
@@ -278,7 +335,7 @@ function App() {
                 </div>
               </div>
 
-              {/*4 - prazo */}
+              {/*4 prazo */}
               <div className="modal-section-right">
                 <div className="modal-section">
                   <h4>Prazo</h4>

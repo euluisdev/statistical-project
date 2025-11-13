@@ -17,31 +17,26 @@ st.markdown("""
     </style>
  """, unsafe_allow_html=True)
 
-# ✅ VERIFICA SE HÁ DADOS NO SESSION_STATE (igual folha_mestre)
 if 'peca_atual' not in st.session_state or 'df_peca' not in st.session_state:
     st.warning("❗ Nenhuma peça carregada. Vá para 'Gerenciar Relatórios' primeiro.")
     if st.button("← Voltar para Reports"):
         st.switch_page("pages/reports.py")
     st.stop()
 
-# ✅ PEGA OS DADOS DO SESSION_STATE
 peca = st.session_state['peca_atual']
 df = st.session_state['df_peca'].copy()
 
-# ✅ HEADER COM INFO DA PEÇA
 col1, col2 = st.columns([5, 1])
 with col1:
-    st.title(f"📋 Action Plan - {peca.get('Nome', 'N/A')} ({peca.get('PartNumber', 'N/A')})")
+    st.title(f"ACTION PLAN - {peca.get('Nome', 'N/A')} ({peca.get('PartNumber', 'N/A')})")
 with col2:
     if st.button("← Voltar", use_container_width=True):
         st.switch_page("pages/reports.py")
 
 st.divider()
 
-# ✅ PROCESSA DADOS PARA O REACT
 pontos_unicos = df['NomePonto'].unique().tolist() if 'NomePonto' in df.columns else []
 
-# Agrupa dados por ponto
 dados_por_ponto = {}
 for ponto in pontos_unicos:
     df_ponto = df[df['NomePonto'] == ponto]
@@ -69,7 +64,6 @@ info_peca = {
     'modelo': str(peca.get('Modelo', 'N/A'))
 }
 
-# ✅ SALVA OS DADOS PROCESSADOS NO SESSION_STATE PARA O COMPONENTE USAR
 st.session_state['react_data'] = {
     'pontos': pontos_unicos,
     'dadosPorPonto': dados_por_ponto,
@@ -77,16 +71,16 @@ st.session_state['react_data'] = {
     'totalMedicoes': len(df)
 }
 
-# 1. Add dir src ao path
+# 1add dir src ao path
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
-# 2. Import
+# 2import
 try:
     from components.action import action_plan_component
     
-    # ✅ PASSA OS DADOS PARA O COMPONENTE
+    #passa para o component
     action_plan_component(
         pontos=pontos_unicos,
         dados_por_ponto=dados_por_ponto,
