@@ -12,6 +12,13 @@ function App() {
     Streamlit.setFrameHeight(900);
   }, []);
 
+  useEffect(() => {
+  if (window.STREAMLIT_DATA) {
+    setPontos(window.STREAMLIT_DATA.pontos || []);
+    console.log('✅ Pontos:', window.STREAMLIT_DATA.pontos);
+  }
+}, []);
+
   const getWeeksRange = (startWeek) => {
     const weeks = [];
     for (let i = 0; i < 10; i++) {
