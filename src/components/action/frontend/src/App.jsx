@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Streamlit } from "streamlit-component-lib";
+import "./App.css";
 
 function App() {
   const [selectedYear, setSelectedYear] = useState(2025);
   const [selectedWeek, setSelectedWeek] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     Streamlit.setComponentReady();
@@ -32,44 +34,16 @@ function App() {
   };
 
   return (
-    <div style={{ fontFamily: "Arial, sans-serif", fontSize: "11px" }}>
-      {/*toolbar */}
-      <div
-        style={{
-          display: "flex",
-          gap: "5px",
-          marginBottom: "10px",
-          alignItems: "center",
-          backgroundColor: "#f0f0f0",
-          padding: "5px",
-          border: "1px solid #ccc",
-        }}
-      >
-        <select
-          value={selectedYear}
-          onChange={handleYearChange}
-          style={{
-            padding: "5px",
-            border: "1px solid #999",
-            backgroundColor: "white",
-            width: "100px",
-          }}
-        >
+    <div className="app-container">
+      {/* toolbar */}
+      <div className="toolbar">
+        <select value={selectedYear} onChange={handleYearChange} className="select-year">
           <option value={2024}>Year 2024</option>
           <option value={2025}>Year 2025</option>
           <option value={2026}>Year 2026</option>
         </select>
 
-        <select
-          value={selectedWeek}
-          onChange={handleWeekChange}
-          style={{
-            padding: "5px",
-            border: "1px solid #999",
-            backgroundColor: "white",
-            width: "100px",
-          }}
-        >
+        <select value={selectedWeek} onChange={handleWeekChange} className="select-week">
           {Array.from({ length: 52 }, (_, i) => i + 1).map((week) => (
             <option key={week} value={week}>
               {week}
@@ -77,80 +51,57 @@ function App() {
           ))}
         </select>
 
-        <button style={btnStyle}>📖</button>
-        <button style={btnStyle}>🏆</button>
-        <label style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+        <button className="btn">📖</button>
+        <button className="btn">🏆</button>
+        <label className="checkbox-label">
           <input type="checkbox" /> Point to point
         </label>
-        <select style={selectStyle}>
+        <select className="select-small">
           <option>CPK</option>
         </select>
-        <select style={selectStyle}>
+        <select className="select-small">
           <option>All</option>
         </select>
-        <button style={btnStyle}>🖨️</button>
-        <button style={btnStyle}>🔍</button>
-        <button style={btnStyle}>📊</button>
-        <button style={btnStyle}>⚠️ RISK</button>
-        <button style={btnStyle}>📋</button>
-        <button style={btnStyle}>🏠</button>
-        <button style={btnStyle}>➕</button>
+        <button className="btn">🖨️</button>
+        <button className="btn">🔍</button>
+        <button className="btn">📊</button>
+        <button className="btn">⚠️ RISK</button>
+        <button className="btn">📋</button>
+        <button className="btn">🏠</button>
+        <button className="btn" onClick={() => setIsModalOpen(true)}>➕</button>
       </div>
 
       {/*title */}
-      <div
-        style={{
-          backgroundColor: "#e0e0e0",
-          padding: "5px 10px",
-          marginBottom: "5px",
-          border: "1px solid #999",
-          fontWeight: "bold",
-          fontSize: "13px",
-        }}
-      >
-        534895200 - REAR RAIL RT
-      </div>
+      <div className="title-bar">534895200 - REAR RAIL RT</div>
 
-      {/*table */}
-      <div style={{ overflowX: "auto" }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            fontSize: "11px",
-          }}
-        >
+      {/*table*/}
+      <div className="table-container">
+        <table className="data-table">
           <thead>
             <tr>
-              <th rowSpan={2} style={headerStyle}>SEQ</th>
-              <th rowSpan={2} style={headerStyle}>LABEL</th>
-              <th rowSpan={2} style={headerStyle}>AXIS</th>
-              <th rowSpan={2} style={headerStyle}>LSE</th>
-              <th rowSpan={2} style={headerStyle}>LIE</th>
-              <th rowSpan={2} style={headerStyle}>SYMBOL</th>
-              <th rowSpan={2} style={headerStyle}>X-MÉDIO</th>
-              <th rowSpan={2} style={headerStyle}>CP</th>
-              <th rowSpan={2} style={headerStyle}>CPK</th>
-              <th rowSpan={2} style={headerStyle}>RANGE</th>
-              <th rowSpan={2} style={headerStyle}>RISK - Desviation</th>
-              <th rowSpan={2} style={headerStyle}>RISK - Root Cause</th>
-              <th rowSpan={2} style={{ ...headerStyle, width: "150px" }}>ACTION PLAN</th>
-              <th rowSpan={2} style={{ ...headerStyle, width: "120px" }}>RESPONSIBLE</th>
-              <th rowSpan={2} style={{ ...headerStyle, width: "70px" }}>DATA</th>
-              <th colSpan={10} style={{ ...headerStyle, backgroundColor: "#d3d3d3" }}>SEMANA</th>
-              <th rowSpan={2} style={{ ...headerStyle, width: "80px" }}>STATUS</th>
+              <th rowSpan={2}>SEQ</th>
+              <th rowSpan={2}>LABEL</th>
+              <th rowSpan={2}>AXIS</th>
+              <th rowSpan={2}>LSE</th>
+              <th rowSpan={2}>LIE</th>
+              <th rowSpan={2}>SYMBOL</th>
+              <th rowSpan={2}>X-MÉDIO</th>
+              <th rowSpan={2}>CP</th>
+              <th rowSpan={2}>CPK</th>
+              <th rowSpan={2}>RANGE</th>
+              <th rowSpan={2}>RISK - Desviation</th>
+              <th rowSpan={2}>RISK - Root Cause</th>
+              <th rowSpan={2} style={{ width: "150px" }}>ACTION PLAN</th>
+              <th rowSpan={2} style={{ width: "120px" }}>RESPONSIBLE</th>
+              <th rowSpan={2} style={{ width: "70px" }}>DATA</th>
+              <th colSpan={10} className="week-header">SEMANA</th>
+              <th rowSpan={2} style={{ width: "80px" }}>STATUS</th>
             </tr>
             <tr>
               {weeks.map((week) => (
                 <th
                   key={week}
-                  style={{
-                    ...headerStyle,
-                    width: "30px",
-                    backgroundColor: week === selectedWeek ? "#808080" : "#d3d3d3",
-                    color: week === selectedWeek ? "white" : "#000",
-                    fontWeight: "bold",
-                  }}
+                  className={`week-cell ${week === selectedWeek ? "selected-week" : ""}`}
                 >
                   {week}
                 </th>
@@ -159,9 +110,9 @@ function App() {
           </thead>
           <tbody>
             {Array.from({ length: 15 }).map((_, i) => (
-              <tr key={i} style={{ height: "35px" }}>
+              <tr key={i}>
                 {Array.from({ length: 15 + weeks.length + 1 }).map((_, j) => (
-                  <td key={j} style={cellStyle}></td>
+                  <td key={j}></td>
                 ))}
               </tr>
             ))}
@@ -169,45 +120,187 @@ function App() {
         </table>
       </div>
 
-      {/*legend*/}
-      <div style={{ marginTop: "10px", fontSize: "12px" }}>
+      {/*legend */}
+      <div className="legend">
         <strong>X</strong> - Ação programada; <strong>NOK</strong> - Ação não efetiva;{" "}
         <strong>R</strong> - Ação reprogramada
       </div>
+
+      {/* MODAL */}
+      {isModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="modal-header">
+              <h3>AutoMarb - Action Plan</h3>
+              <button className="modal-close" onClick={() => setIsModalOpen(false)}>×</button>
+            </div>
+
+            <div className="modal-body">
+              {/* 1 action */}
+              <div className="modal-section">
+                <h4>Ação</h4>
+                
+                <div className="form-group">
+                  <label>Número da Ação</label>
+                  <div className="number-control">
+                    <select className="action-select">
+                      <option>001</option>
+                      <option>002</option>
+                      <option>003</option>
+                    </select>
+                    <button className="btn-control">-</button>
+                    <button className="btn-control">+</button>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Filtro</label>
+                  <div className="filter-group">
+                    <select className="filter-select">
+                      <option>Conformity</option>
+                    </select>
+                    <select className="filter-select">
+                      <option>Red</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="points-box">
+                  <div className="point-item">PT 231</div>
+                  <div className="point-item">PT 92T</div>
+                </div>
+
+                <div className="scroll-buttons">
+                  <button className="btn-scroll">&gt;</button>
+                  <button className="btn-scroll">&lt;</button>
+                </div>
+
+                <label className="checkbox-label">
+                  <input type="checkbox" defaultChecked />
+                  Somente pontos cálculo
+                </label>
+
+                <div className="number-display">2</div>
+              </div>
+
+              {/* 2history */}
+              <div className="modal-section wide">
+                <h4>Histórico</h4>
+
+                <div className="radio-group">
+                  <label><input type="radio" name="status" defaultChecked /> X - Ação programada</label>
+                  <label><input type="radio" name="status" /> R - Ação reprogramada</label>
+                  <label><input type="radio" name="status" /> NOK - Ação não efetiva</label>
+                  <label><input type="radio" name="status" /> Não definida</label>
+                </div>
+
+                <div className="history-content">
+                  <div className="history-left">
+                    <h5>Pontos da Ação</h5>
+                    <div className="points-list">
+                      <div>PT_187T</div>
+                      <div>PT_125T</div>
+                      <div className="selected">PT_125T</div>
+                    </div>
+                    <button className="btn-remove">Remover todos</button>
+                  </div>
+
+                  <div className="history-right">
+                    <h5>Ação de execução</h5>
+                    <textarea 
+                      className="action-textarea"
+                      defaultValue="corrigir material&#10;( TRIDENTE DX )"
+                    />
+                  </div>
+                </div>
+
+                <div className="status-grid">
+                  <div className="status-item">
+                    <label>Status</label>
+                    <div className="status-box"></div>
+                  </div>
+                  <div className="status-item">
+                    <label>Analisys</label>
+                    <select className="analysis-select">
+                      <option>Process</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/*3 responsabilidade */}
+              <div className="modal-section">
+                <h4>Responsabilidade</h4>
+
+                <div className="form-group">
+                  <div className="name-control">
+                    <div className="name-box">EVERTON VALERIO (FERRAMENTARIA)</div>
+                    <div className="nav-buttons">
+                      <button className="btn-nav">&gt;</button>
+                      <button className="btn-nav">&lt;</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Nome</label>
+                  <div className="dept-control">
+                    <select className="dept-select">
+                      <option>ITEM DE CONTA TRABALHO</option>
+                    </select>
+                    <button className="btn-control">+</button>
+                    <button className="btn-control">-</button>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Departamento</label>
+                  <div className="dept-control">
+                    <select className="dept-select">
+                      <option>QUALIDADE METROLOGIA</option>
+                    </select>
+                    <button className="btn-control">+</button>
+                    <button className="btn-control">-</button>
+                  </div>
+                </div>
+
+                <div className="action-buttons">
+                  <button className="btn-action">Remover</button>
+                  <button className="btn-action">Limpar</button>
+                </div>
+              </div>
+
+              {/*4 - prazo */}
+              <div className="modal-section-right">
+                <div className="modal-section">
+                  <h4>Prazo</h4>
+                  <input type="date" className="date-input" defaultValue="2025-11-20" />
+                  <select className="year-select">
+                    <option>Year 2025</option>
+                  </select>
+                  <select className="week-label">
+                    <option>Week</option>
+                  </select>
+                  <input type="number" className="week-input" defaultValue="47" />
+                </div>
+
+                <div className="modal-section">
+                  <h4>Registro</h4>
+                  <button className="btn-save">Gravar</button>
+                  <button className="btn-export">Exportar</button>
+                  <div className="icon-buttons">
+                    <button className="btn-icon">📁</button>
+                    <button className="btn-icon">🖨️</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-const btnStyle = {
-  padding: "5px 10px",
-  border: "1px solid #999",
-  backgroundColor: "#e0e0e0",
-  cursor: "pointer",
-};
-
-const selectStyle = {
-  padding: "5px",
-  border: "1px solid #999",
-  backgroundColor: "white",
-  width: "80px",
-};
-
-const headerStyle = {
-  backgroundColor: "#c0c0c0",
-  border: "1px solid #000",
-  padding: "8px 4px",
-  textAlign: "center",
-  fontWeight: "bold",
-  color: "#000",
-  verticalAlign: "middle",
-};
-
-const cellStyle = {
-  border: "1px solid #000",
-  padding: "8px 4px",
-  textAlign: "center",
-  backgroundColor: "#fff",
-  verticalAlign: "middle",
-};
 
 export default App;

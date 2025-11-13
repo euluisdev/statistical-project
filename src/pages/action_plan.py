@@ -5,6 +5,17 @@ import sys
 
 st.set_page_config(page_title="ACTION PLAN", layout="wide")
 
+st.markdown("""
+    <style>
+        .block-container {
+          padding-top: 3rem;
+          padding-bottom: 1rem;
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+    </style>
+ """, unsafe_allow_html=True)
+
 #1 add dir src ao path
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:
