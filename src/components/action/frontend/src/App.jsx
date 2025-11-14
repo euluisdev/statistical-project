@@ -2,42 +2,37 @@ import React, { useEffect, useState } from "react";
 import { Streamlit } from "streamlit-component-lib";
 import "./App.css";
 
-function App() {
+function App({ args = {} }) {
   const [selectedYear, setSelectedYear] = useState(2025);
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pontos, setPontos] = useState([]);
   const [selectedPoints, setSelectedPoints] = useState([]);
   const [dadosPorPonto, setDadosPorPonto] = useState({});
+  const [dataframeCompleto, setDataframeCompleto] = useState([]);
 
   useEffect(() => {
     Streamlit.setComponentReady();
     Streamlit.setFrameHeight(900);
+  })
 
-    //listner receber dados st
-    window.addEventListener("message", (event) => {
-      const data = event.data;
+  useEffect(() => {
+    if (args) {
+      console.log('Args recebidos:', args);
       
-      //mensagem com args?
-      if (data.type === "streamlit:render" && data.args) {
-        console.log("Recebi args do streamlit:", data.args);
-        
-        if (data.args.pontos) {
-          setPontos(data.args.pontos);
-        }
-        if (data.args.dados_por_ponto) {
-          setDadosPorPonto(data.args.dados_por_ponto);
-        }
+      if (args.pontos) {
+        setPontos(args.pontos);
+        console.log('Pontos:', args.pontos);
       }
-    });
-
-    //fallback
-    if (window.STREAMLIT_DATA) {
-      console.log("Usando window.STREAMLIT_DATA:", window.STREAMLIT_DATA);
-      setPontos(window.STREAMLIT_DATA.pontos || []);
-      setDadosPorPonto(window.STREAMLIT_DATA.dadosPorPonto || {});
+      if (args.dadosPorPonto) {
+        setDadosPorPonto(args.dadosPorPonto);
+      }
+      if (args.dataframeCompleto) {
+        setDataframeCompleto(args.dataframeCompleto);
+        console.log('Total registros:', args.dataframeCompleto.length);
+      }
     }
-  }, []);
+  }, [args]);
 
   const getWeeksRange = (startWeek) => {
     const weeks = [];
@@ -164,24 +159,20 @@ function App() {
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
             <div className="modal-header">
               <h3>Action Plan</h3>
               <button className="modal-close" onClick={() => setIsModalOpen(false)}>×</button>
             </div>
 
             <div className="modal-body">
-              {/* 1 action */}
               <div className="modal-section">
-                <h4>Ação</h4>
+                <h4>Plano</h4>
                 
                 <div className="form-group">
                   <label>Número da Ação</label>
                   <div className="number-control">
                     <select className="action-select">
                       <option>001</option>
-                      <option>002</option>
-                      <option>003</option>
                     </select>
                     <button className="btn-control">-</button>
                     <button className="btn-control">+</button>
@@ -193,16 +184,14 @@ function App() {
                   <div className="filter-group">
                     <select className="filter-select">
                       <option>Conformity</option>
-                      <option>CPK</option>
                     </select>
                     <select className="filter-select">
                       <option>Red</option>
-                      <option>Yellow</option>
                     </select>
                   </div>
                 </div>
 
-                {/*pnt dinamicos */}
+                {/* pnt eixo */}
                 <div className="points-box">
                   {pontos.length > 0 ? (
                     pontos.map((ponto, idx) => (
@@ -211,12 +200,16 @@ function App() {
                         className={`point-item ${selectedPoints.includes(ponto) ? 'selected' : ''}`}
                         onClick={() => togglePoint(ponto)}
                         style={{ cursor: 'pointer' }}
+                        title={dadosPorPonto[ponto] ? 
+                          `${dadosPorPonto[ponto].localizacao} - ${dadosPorPonto[ponto].tipo_geo}` : 
+                          ''
+                        }
                       >
                         {ponto}
                       </div>
                     ))
                   ) : (
-                    <div style={{ opacity: 0.7, fontStyle: 'italic' }}>
+                    <div style={{ opacity: 0.7, fontStyle: 'italic', textAlign: 'center' }}>
                       Nenhum ponto carregado
                     </div>
                   )}
@@ -234,23 +227,11 @@ function App() {
 
                 {/*contador */}
                 <div className="number-display">{selectedPoints.length}</div>
-
-                <div className="scroll-buttons">
-                  <button className="btn-scroll">&gt;</button>
-                  <button className="btn-scroll">&lt;</button>
-                </div>
-
-                <label className="checkbox-label">
-                  <input type="checkbox" defaultChecked />
-                  Somente pontos cálculo
-                </label>
-
-                <div className="number-display">2</div>
               </div>
 
               {/* 2history */}
               <div className="modal-section wide">
-                <h4>Histórico</h4>
+                <h4>Ação</h4>
 
                 <div className="radio-group">
                   <label><input type="radio" name="status" defaultChecked /> X - Ação programada</label>
