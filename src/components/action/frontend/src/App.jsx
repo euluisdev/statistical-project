@@ -9,7 +9,8 @@ function App({ args = {} }) {
   const [pontos, setPontos] = useState([]);
   const [selectedPoints, setSelectedPoints] = useState([]);
   const [dadosPorPonto, setDadosPorPonto] = useState({});
-  const [dataframeCompleto, setDataframeCompleto] = useState([]);
+  const [dataframeCompleto, setDataframeCompleto] = useState([]); 
+  const [actionPoints, setActionPoints] = useState([]); 
 
   useEffect(() => {
     Streamlit.setComponentReady();
@@ -62,6 +63,28 @@ function App({ args = {} }) {
         : [...prev, ponto]
     );
   };
+
+  const addSelectedToAction = () => {
+  if (selectedPoints.length === 0) return;
+
+  setActionPoints(prev => [
+    ...prev,
+    ...selectedPoints.filter(p => !prev.includes(p))
+  ]);
+  setSelectedPoints([]);
+  };
+  const removeSelectedFromAction = () => {
+  if (selectedPoints.length === 0) return;
+
+  setActionPoints(prev =>
+    prev.filter(p => !selectedPoints.includes(p))
+  );
+
+  setSelectedPoints([]);
+};
+
+
+
   return (
     <div className="app-container">
       {/*toolbar */}
@@ -216,8 +239,8 @@ function App({ args = {} }) {
                 </div>
 
                 <div className="scroll-buttons">
-                  <button className="btn-scroll">&gt;</button>
-                  <button className="btn-scroll">&lt;</button>
+                  <button className="btn-scroll" onClick={addSelectedToAction}>&gt;</button>
+                  <button className="btn-scroll" onClick={removeSelectedFromAction}>&lt;</button>
                 </div>
 
                 <label className="checkbox-label">
@@ -244,10 +267,21 @@ function App({ args = {} }) {
                   <div className="history-left">
                     <h5>Pontos da Ação</h5>
                     <div className="points-list">
-                      <div>PT_187T</div>
-                      <div>PT_125T</div>
-                      <div className="selected">PT_125T</div>
+                      {actionPoints.length === 0 ? (
+                        <div style={{ opacity: 0.6, fontStyle: "italic" }}>Nenhum ponto</div>
+                      ) : (
+                        actionPoints.map((ponto, idx) => (
+                          <div
+                            key={idx}
+                            className={`point-item ${selectedPoints.includes(ponto) ? "selected" : ""}`}
+                            onClick={() => togglePoint(ponto)}
+                          >
+                            {ponto}
+                          </div>
+                        ))
+                      )}
                     </div>
+
                     <button className="btn-remove">Remover todos</button>
                   </div>
 

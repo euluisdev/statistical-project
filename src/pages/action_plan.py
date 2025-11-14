@@ -17,38 +17,32 @@ st.markdown("""
     </style>
  """, unsafe_allow_html=True)
 
-# ✅ VERIFICA SE HÁ DADOS NO SESSION_STATE
 if 'peca_atual' not in st.session_state or 'df_peca' not in st.session_state:
-    st.warning("❗ Nenhuma peça carregada. Vá para 'Gerenciar Relatórios' primeiro.")
+    st.warning("Nenhuma peça carregada. Vá para 'Gerenciar Relatórios' primeiro.")
     if st.button("← Voltar para Reports"):
         st.switch_page("pages/reports.py")
     st.stop()
 
-# ✅ PEGA OS DADOS DO SESSION_STATE
 peca = st.session_state['peca_atual']
 df = st.session_state['df_peca'].copy()
 
-# ✅ HEADER COM INFO DA PEÇA
 col1, col2 = st.columns([5, 1])
 with col1:
-    st.title(f"📋 Action Plan - {peca.get('Nome', 'N/A')} ({peca.get('PartNumber', 'N/A')})")
+    st.title(f"Action Plan - {peca.get('Nome', 'N/A')} ({peca.get('PartNumber', 'N/A')})")
 with col2:
     if st.button("← Voltar", use_container_width=True):
         st.switch_page("pages/reports.py")
 
 st.divider()
 
-# ✅ CRIA LISTA DE PONTOS COM EIXO (PontoEixo)
 if "Eixo" in df.columns and "NomePonto" in df.columns:
     df["PontoEixo"] = df["NomePonto"].astype(str) + " - " + df["Eixo"].astype(str)
     pontos_unicos = df["PontoEixo"].unique().tolist()
 else:
     pontos_unicos = df['NomePonto'].unique().tolist() if 'NomePonto' in df.columns else []
 
-# ✅ CONVERTE DATAFRAME COMPLETO PARA JSON (todos os dados)
 df_json = df.to_dict('records')
 
-# ✅ AGRUPA DADOS POR PONTO+EIXO
 dados_por_ponto = {}
 for ponto_eixo in pontos_unicos:
     df_ponto = df[df['PontoEixo'] == ponto_eixo] if 'PontoEixo' in df.columns else df[df['NomePonto'] == ponto_eixo]
@@ -76,16 +70,15 @@ info_peca = {
     'modelo': str(peca.get('Modelo', 'N/A'))
 }
 
-# 1 add dir src ao path
+# 1
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
-#2 import
+#2
 try:
     from components.action import action_plan_component
     
-    #passando todo df
     action_plan_component(
         pontos=pontos_unicos,
         dados_por_ponto=dados_por_ponto,
