@@ -189,15 +189,6 @@ function Modal({
             <h4>Responsabilidade</h4>
 
             <div className="form-group">
-              <div className="name-control">
-                <div className="name-box">ITEM DE CONTA TRABALHO (QUALIDADE METROLOGIA)</div>
-                <div className="nav-buttons">
-                  <button className="btn-nav">&lt;</button>
-                </div>
-              </div>
-            </div>
-
-            <div className="form-group">
               <label>Nome</label>
               <div className="dept-control">
                 <select className="dept-select">
@@ -216,6 +207,16 @@ function Modal({
                 </select>
                 <button className="btn-control">+</button>
                 <button className="btn-control">-</button>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Responsável</label>
+              <div className="name-control">
+                <div className="name-box">ITEM DE CONTA TRABALHO (QUALIDADE METROLOGIA)</div>
+                <div className="nav-buttons">
+                  <button className="btn-nav">&lt;</button>
+                </div>
               </div>
             </div>
 
