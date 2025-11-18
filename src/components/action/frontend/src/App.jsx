@@ -19,9 +19,11 @@ function App({ args = {} }) {
   const [dataframeCompleto, setDataframeCompleto] = useState([]);
   const [actionPoints, setActionPoints] = useState([]);
   const [pontosProcessados, setPontosProcessados] = useState({});
+  const [savedActions, setSavedActions] = useState([]); 
+  const [partNumber, setPartNumber] = useState(''); 
   
-  // Filtros
-  const [tipoFiltro, setTipoFiltro] = useState('conformidade'); // 'cp', 'cpk', 'conformidade'
+  //filtros
+  const [tipoFiltro, setTipoFiltro] = useState('conformidade'); 
   const [valorFiltro, setValorFiltro] = useState('all');
 
   useEffect(() => {
@@ -29,32 +31,35 @@ function App({ args = {} }) {
     Streamlit.setFrameHeight(900);
   }, []);
 
-  // Recebe dados do Streamlit
+  //get data streamlit
   useEffect(() => {
     if (args) {
-      console.log('📦 Args recebidos:', args);
+      console.log('Args recebidos:', args);
       
       if (args.pontos) {
         setPontos(args.pontos);
         setPontosFiltrados(args.pontos);
-        console.log('✅ Pontos:', args.pontos);
       }
       if (args.dadosPorPonto) {
         setDadosPorPonto(args.dadosPorPonto);
       }
+      if (args.infoPeca) {
+        setPartNumber(args.infoPeca.part_number || '');
+      }
       if (args.dataframeCompleto) {
         setDataframeCompleto(args.dataframeCompleto);
-        console.log('📋 Total registros:', args.dataframeCompleto.length);
-        
-        // 🔥 PROCESSA TODOS OS PONTOS COM CÁLCULOS
         const processados = processarTodosPontos(args.dataframeCompleto);
         setPontosProcessados(processados);
-        console.log('📊 Pontos processados com stats:', processados);
+        console.log('Pontos processados com stats:', processados);
+      }
+      if (args.acoesSalvas) {
+        setSavedActions(args.acoesSalvas);
+        console.log(args.acoesSalvas);
       }
     }
   }, [args]);
 
-  // 🔥 APLICA FILTROS AUTOMATICAMENTE
+  //apply autofilters 
   useEffect(() => {
     if (Object.keys(pontosProcessados).length === 0) {
       setPontosFiltrados(pontos);
@@ -68,7 +73,7 @@ function App({ args = {} }) {
       return;
     }
 
-    // Filtra baseado no tipo escolhido
+    //filtra o tipo escolhido
     filtrados = filtrados.filter(chave => {
       const ponto = pontosProcessados[chave];
       if (!ponto.stats) return false;
@@ -103,7 +108,6 @@ function App({ args = {} }) {
     });
 
     setPontosFiltrados(filtrados);
-    console.log(`🔍 Filtro ${tipoFiltro} = ${valorFiltro}: ${filtrados.length} pontos`);
   }, [tipoFiltro, valorFiltro, pontosProcessados, pontos]);
 
   const getWeeksRange = (startWeek) => {
@@ -154,6 +158,55 @@ function App({ args = {} }) {
     setSelectedPoints([]);
   };
 
+  // save action - streamlit
+const saveAction = (actionData) => {
+  const actionId = `action_${Date.now()}`;
+  
+  const newAction = {
+    id: actionId,
+    numeroAcao: actionData.numeroAcao,
+    pontos: actionData.pontos,
+    statusAcao: actionData.statusAcao,
+    acaoExecucao: actionData.acaoExecucao,
+    analysis: actionData.analysis,
+    responsible: actionData.responsible,
+    department: actionData.department,
+    prazo: actionData.prazo,
+    year: actionData.year,
+    week: actionData.week,
+    createdAt: new Date().toISOString(),
+
+    //generate complete data - each point.
+    pontosData: actionData.pontos.map(ponto => {
+      const stats = pontosProcessados[ponto]?.stats;
+      const pontoInfo = pontosProcessados[ponto];
+      return {
+        pontoEixo: ponto,
+        label: pontoInfo?.nomePonto || '',
+        axis: pontoInfo?.eixo || '',
+        lse: stats?.lse || '',
+        lie: stats?.lie || '',
+        symbol: pontoInfo?.tipoGeometrico || '',
+        xMedio: stats?.xMedio || '',
+        cp: stats?.cp || '',
+        cpk: stats?.cpk || '',
+        range: stats?.range || '',
+        riskDeviation: stats?.riskDeviation || '',
+        riskRootCause: stats?.riskRootCause || ''
+      };
+    })
+  };
+
+  // send to streamlit
+  Streamlit.setComponentValue({
+    action: 'save',
+    data: newAction
+  });
+
+  console.log('Ação enviada para salvar:', newAction);
+  return true;
+};
+
   return (
     <div className="app-container">
       {/*toolbar */}
@@ -178,7 +231,7 @@ function App({ args = {} }) {
           <input type="checkbox" /> Point to point
         </label>
         
-        {/* 🔥 FILTRO 1: VALOR (muda baseado no tipo) */}
+        {/* filter */}
         <select 
           className="select-small"
           value={valorFiltro}
@@ -201,13 +254,13 @@ function App({ args = {} }) {
           )}
         </select>
         
-        {/* 🔥 FILTRO 2: TIPO (CP, CPK, Conformidade) */}
+        {/* cp - cpk */}
         <select 
           className="select-small"
           value={tipoFiltro}
           onChange={(e) => {
             setTipoFiltro(e.target.value);
-            setValorFiltro('all'); // Reset valor ao mudar tipo
+            setValorFiltro('all'); //resetvalue
           }}
         >
           <option value="conformidade">Conformidade</option>
@@ -262,8 +315,38 @@ function App({ args = {} }) {
             </tr>
           </thead>
           <tbody>
-            {Array.from({ length: 15 }).map((_, i) => (
-              <tr key={i}>
+            {/* render saves actions*/}
+            {savedActions.map((action, actionIdx) => 
+              action.pontosData.map((ponto, pontoIdx) => (
+                <tr key={`${action.id}-${pontoIdx}`}>
+                  <td>{actionIdx + 1}</td>
+                  <td>{ponto.label}</td>
+                  <td>{ponto.axis}</td>
+                  <td>{ponto.lse}</td>
+                  <td>{ponto.lie}</td>
+                  <td>{ponto.symbol}</td>
+                  <td>{ponto.xMedio}</td>
+                  <td>{ponto.cp}</td>
+                  <td>{ponto.cpk}</td>
+                  <td>{ponto.range}</td>
+                  <td>{ponto.riskDeviation}%</td>
+                  <td>{ponto.riskRootCause}%</td>
+                  <td>{pontoIdx === 0 ? action.acaoExecucao : ''}</td>
+                  <td>{pontoIdx === 0 ? action.responsible : ''}</td>
+                  <td>{pontoIdx === 0 ? action.prazo : ''}</td>
+                  {weeks.map((week) => (
+                    <td key={week}>
+                      {pontoIdx === 0 && action.week === week ? action.statusAcao : ''}
+                    </td>
+                  ))}
+                  <td>{pontoIdx === 0 ? action.analysis : ''}</td>
+                </tr>
+              ))
+            )}
+            
+            {/*empty lines */}
+            {Array.from({ length: Math.max(0, 15 - savedActions.reduce((sum, a) => sum + a.pontosData.length, 0)) }).map((_, i) => (
+              <tr key={`empty-${i}`}>
                 {Array.from({ length: 15 + weeks.length + 1 }).map((_, j) => (
                   <td key={j}></td>
                 ))}
@@ -300,6 +383,7 @@ function App({ args = {} }) {
         removeSelectedFromAction={removeSelectedFromAction}
         actionPoints={actionPoints}
         setActionPoints={setActionPoints}
+        saveAction={saveAction} 
       />
 
     </div>

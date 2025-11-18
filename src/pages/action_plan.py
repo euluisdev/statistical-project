@@ -70,22 +70,72 @@ info_peca = {
     'modelo': str(peca.get('Modelo', 'N/A'))
 }
 
+part_number = peca.get('PartNumber', 'N/A')
+pasta_peca = f"dados/peca_{part_number}"
+arquivo_acoes = os.path.join(pasta_peca, "action_plans.json")
+
+acoes_salvas = []
+if os.path.exists(arquivo_acoes):
+    try:
+        with open(arquivo_acoes, 'r', encoding='utf-8') as f:
+            acoes_salvas = json.load(f)
+        st.success(f"✅ {len(acoes_salvas)} ação(ões) carregada(s)")
+    except Exception as e:
+        st.error(f"Erro ao carregar ações: {e}")
+
+#callback p salvar ações - vindo do react pelo streamlit 
+if 'save_action_trigger' in st.session_state and st.session_state.save_action_trigger:
+    action_data = st.session_state.get('action_to_save', None)
+    
+    if action_data:
+        try:
+            #create folder
+            os.makedirs(pasta_peca, exist_ok=True)
+            
+            # load actions
+            if os.path.exists(arquivo_acoes):
+                with open(arquivo_acoes, 'r', encoding='utf-8') as f:
+                    acoes_salvas = json.load(f)
+            else:
+                acoes_salvas = []
+            
+            #add new actions
+            acoes_salvas.append(action_data)
+            
+            #  save file
+            with open(arquivo_acoes, 'w', encoding='utf-8') as f:
+                json.dump(acoes_salvas, f, ensure_ascii=False, indent=2)
+            
+            st.success("Plano de Ação salvo com sucesso!")
+            st.session_state.save_action_trigger = False
+            st.rerun()
+            
+        except Exception as e:
+            st.error(f"❌ Erro ao salvar ação: {e}")
+
 # 1
 src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
-#2
+#2 import
 try:
     from components.action import action_plan_component
     
-    action_plan_component(
+    result = action_plan_component(
         pontos=pontos_unicos,
         dados_por_ponto=dados_por_ponto,
         info_peca=info_peca,
         dataframe_completo=df_json,  #df
+        acoes_salvas=acoes_salvas, 
+        pasta_peca=pasta_peca, 
         key="action_plan_main"
     )
+
+    if result and isinstance(result, dict) and result.get('action') == 'save':
+      st.session_state.action_to_save = result.get('data')
+      st.session_state.save_action_trigger = True
+      st.rerun()
     
 except ImportError as e:
     st.error(f"Erro ao importar: {e}")

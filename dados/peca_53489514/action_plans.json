@@ -1,0 +1,188 @@
+[
+  {
+    "id": "action_1763431093933",
+    "numeroAcao": "undefined",
+    "pontos": [
+      "CÍR1 - X",
+      "CÍR1 - Z",
+      "CÍR1 - D"
+    ],
+    "statusAcao": "X",
+    "acaoExecucao": "Deslocar ferramenta em X",
+    "analysis": "Investigation",
+    "responsible": "ITEM DE CONTA TRABALHO",
+    "department": "QUALIDADE METROLOGIA",
+    "prazo": "2025-11-18",
+    "year": 2025,
+    "week": 49,
+    "createdAt": "2025-11-18T01:58:13.933Z",
+    "pontosData": [
+      {
+        "pontoEixo": "CÍR1 - X",
+        "label": "CÍR1",
+        "axis": "X",
+        "lse": "0.500",
+        "lie": "-0.500",
+        "symbol": "CÍRCULO",
+        "xMedio": "-0.264",
+        "cp": "1.57",
+        "cpk": "0.74",
+        "range": "0.370",
+        "riskDeviation": "0.0",
+        "riskRootCause": "60.0"
+      },
+      {
+        "pontoEixo": "CÍR1 - Z",
+        "label": "CÍR1",
+        "axis": "Z",
+        "lse": "0.500",
+        "lie": "-0.500",
+        "symbol": "CÍRCULO",
+        "xMedio": "-0.307",
+        "cp": "8.32",
+        "cpk": "3.21",
+        "range": "0.060",
+        "riskDeviation": "0.0",
+        "riskRootCause": "70.0"
+      },
+      {
+        "pontoEixo": "CÍR1 - D",
+        "label": "CÍR1",
+        "axis": "D",
+        "lse": "0.080",
+        "lie": "0.300",
+        "symbol": "CÍRCULO",
+        "xMedio": "0.240",
+        "cp": "-2.94",
+        "cpk": "-4.28",
+        "range": "0.040",
+        "riskDeviation": "100.0",
+        "riskRootCause": "100.0"
+      }
+    ]
+  },
+  {
+    "id": "action_1763431093933",
+    "numeroAcao": "undefined",
+    "pontos": [
+      "CÍR1 - X",
+      "CÍR1 - Z",
+      "CÍR1 - D"
+    ],
+    "statusAcao": "X",
+    "acaoExecucao": "Deslocar ferramenta em X",
+    "analysis": "Investigation",
+    "responsible": "ITEM DE CONTA TRABALHO",
+    "department": "QUALIDADE METROLOGIA",
+    "prazo": "2025-11-18",
+    "year": 2025,
+    "week": 49,
+    "createdAt": "2025-11-18T01:58:13.933Z",
+    "pontosData": [
+      {
+        "pontoEixo": "CÍR1 - X",
+        "label": "CÍR1",
+        "axis": "X",
+        "lse": "0.500",
+        "lie": "-0.500",
+        "symbol": "CÍRCULO",
+        "xMedio": "-0.264",
+        "cp": "1.57",
+        "cpk": "0.74",
+        "range": "0.370",
+        "riskDeviation": "0.0",
+        "riskRootCause": "60.0"
+      },
+      {
+        "pontoEixo": "CÍR1 - Z",
+        "label": "CÍR1",
+        "axis": "Z",
+        "lse": "0.500",
+        "lie": "-0.500",
+        "symbol": "CÍRCULO",
+        "xMedio": "-0.307",
+        "cp": "8.32",
+        "cpk": "3.21",
+        "range": "0.060",
+        "riskDeviation": "0.0",
+        "riskRootCause": "70.0"
+      },
+      {
+        "pontoEixo": "CÍR1 - D",
+        "label": "CÍR1",
+        "axis": "D",
+        "lse": "0.080",
+        "lie": "0.300",
+        "symbol": "CÍRCULO",
+        "xMedio": "0.240",
+        "cp": "-2.94",
+        "cpk": "-4.28",
+        "range": "0.040",
+        "riskDeviation": "100.0",
+        "riskRootCause": "100.0"
+      }
+    ]
+  },
+  {
+    "id": "action_1763431093933",
+    "numeroAcao": "undefined",
+    "pontos": [
+      "CÍR1 - X",
+      "CÍR1 - Z",
+      "CÍR1 - D"
+    ],
+    "statusAcao": "X",
+    "acaoExecucao": "Deslocar ferramenta em X",
+    "analysis": "Investigation",
+    "responsible": "ITEM DE CONTA TRABALHO",
+    "department": "QUALIDADE METROLOGIA",
+    "prazo": "2025-11-18",
+    "year": 2025,
+    "week": 49,
+    "createdAt": "2025-11-18T01:58:13.933Z",
+    "pontosData": [
+      {
+        "pontoEixo": "CÍR1 - X",
+        "label": "CÍR1",
+        "axis": "X",
+        "lse": "0.500",
+        "lie": "-0.500",
+        "symbol": "CÍRCULO",
+        "xMedio": "-0.264",
+        "cp": "1.57",
+        "cpk": "0.74",
+        "range": "0.370",
+        "riskDeviation": "0.0",
+        "riskRootCause": "60.0"
+      },
+      {
+        "pontoEixo": "CÍR1 - Z",
+        "label": "CÍR1",
+        "axis": "Z",
+        "lse": "0.500",
+        "lie": "-0.500",
+        "symbol": "CÍRCULO",
+        "xMedio": "-0.307",
+        "cp": "8.32",
+        "cpk": "3.21",
+        "range": "0.060",
+        "riskDeviation": "0.0",
+        "riskRootCause": "70.0"
+      },
+      {
+        "pontoEixo": "CÍR1 - D",
+        "label": "CÍR1",
+        "axis": "D",
+        "lse": "0.080",
+        "lie": "0.300",
+        "symbol": "CÍRCULO",
+        "xMedio": "0.240",
+        "cp": "-2.94",
+        "cpk": "-4.28",
+        "range": "0.040",
+        "riskDeviation": "100.0",
+        "riskRootCause": "100.0"
+      }
+    ]
+  }
+]

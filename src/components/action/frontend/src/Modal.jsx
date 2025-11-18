@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 function Modal({ 
   isOpen, 
@@ -14,8 +14,65 @@ function Modal({
   addSelectedToAction,
   removeSelectedFromAction,
   actionPoints,
-  setActionPoints
+  setActionPoints,
+  saveAction,
+  selectedWeek,
+  selectedYear,
+  nextActionNumber
 }) {
+  const [numeroAcao, setNumeroAcao] = useState(String(nextActionNumber).padStart(3, '0'));
+  const [statusAcao, setStatusAcao] = useState('X');
+  const [acaoExecucao, setAcaoExecucao] = useState('');
+  const [analysis, setAnalysis] = useState('Process');
+  const [responsible, setResponsible] = useState('ITEM DE CONTA TRABALHO');
+  const [department, setDepartment] = useState('QUALIDADE METROLOGIA');
+  const [prazo, setPrazo] = useState(new Date().toISOString().split('T')[0]);
+  const [year, setYear] = useState(selectedYear);
+  const [week, setWeek] = useState(selectedWeek);
+
+  useEffect(() => {
+    setNumeroAcao(String(nextActionNumber).padStart(3, '0'));
+  }, [nextActionNumber]);
+
+  useEffect(() => {
+    setWeek(selectedWeek);
+    setYear(selectedYear);
+  }, [selectedWeek, selectedYear]);
+
+  const handleSave = async () => {
+    if (actionPoints.length === 0) {
+      alert('Adicione pelo menos um ponto à ação!');
+      return;
+    }
+
+    if (!acaoExecucao.trim()) {
+      alert('Descreva a ação de execução!');
+      return;
+    }
+
+    const actionData = {
+      numeroAcao,
+      pontos: actionPoints,
+      statusAcao,
+      acaoExecucao,
+      analysis,
+      responsible,
+      department,
+      prazo,
+      year,
+      week
+    };
+
+    const success = await saveAction(actionData);
+    
+    if (success) {
+      // Limpa o formulário
+      setActionPoints([]);
+      setAcaoExecucao('');
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -27,18 +84,20 @@ function Modal({
         </div>
 
         <div className="modal-body">
-          {/*1 plano */}
+          {/* 1. Plano */}
           <div className="modal-section">
             <h4>Plano</h4>
             
             <div className="form-group">
               <label>Número da Ação</label>
               <div className="number-control">
-                <select className="action-select">
-                  <option>001</option>
-                </select>
-                <button className="btn-control">-</button>
-                <button className="btn-control">+</button>
+                <input 
+                  type="text" 
+                  className="action-select" 
+                  value={numeroAcao}
+                  onChange={(e) => setNumeroAcao(e.target.value)}
+                  style={{ width: '100%', padding: '4px' }}
+                />
               </div>
             </div>
 
@@ -67,7 +126,6 @@ function Modal({
                   )}
                 </select>
                 
-                {/* filtro */}
                 <select 
                   className="filter-select"
                   value={tipoFiltro}
@@ -83,7 +141,6 @@ function Modal({
               </div>
             </div>
 
-            {/* Pontos com filtros */}
             <div className="points-box">
               {pontosFiltrados.length > 0 ? (
                 pontosFiltrados.map((ponto, idx) => {
@@ -96,7 +153,7 @@ function Modal({
                       onClick={() => togglePoint(ponto)}
                       style={{ cursor: 'pointer' }}
                       title={stats ? 
-                        `CPK: ${stats.cpk} | CP: ${stats.cp}\nX-Médio: ${stats.xMedio} | Range: ${stats.range}\nRISK Dev: ${stats.riskDeviation}% | RISK Root: ${stats.riskRootCause}%` : 
+                        `CPK: ${stats.cpk} | CP: ${stats.cp}\nX-Médio: ${stats.xMedio} | Range: ${stats.range}` : 
                         ponto
                       }
                     >
@@ -124,15 +181,38 @@ function Modal({
             <div className="number-display">{selectedPoints.length}</div>
           </div>
 
-          {/* 2 acao */}
+          {/* 2. Ação */}
           <div className="modal-section wide">
             <h4>Ação</h4>
 
             <div className="radio-group">
-              <label><input type="radio" name="status" defaultChecked /> X - Ação programada</label>
-              <label><input type="radio" name="status" /> R - Ação reprogramada</label>
-              <label><input type="radio" name="status" /> NOK - Ação não efetiva</label>
-              <label><input type="radio" name="status" /> Não definida</label>
+              <label>
+                <input 
+                  type="radio" 
+                  name="status" 
+                  value="X"
+                  checked={statusAcao === 'X'}
+                  onChange={(e) => setStatusAcao(e.target.value)}
+                /> X - Ação programada
+              </label>
+              <label>
+                <input 
+                  type="radio" 
+                  name="status" 
+                  value="R"
+                  checked={statusAcao === 'R'}
+                  onChange={(e) => setStatusAcao(e.target.value)}
+                /> R - Ação reprogramada
+              </label>
+              <label>
+                <input 
+                  type="radio" 
+                  name="status" 
+                  value="NOK"
+                  checked={statusAcao === 'NOK'}
+                  onChange={(e) => setStatusAcao(e.target.value)}
+                /> NOK - Ação não efetiva
+              </label>
             </div>
 
             <div className="history-content">
@@ -164,6 +244,8 @@ function Modal({
                 <textarea 
                   className="action-textarea"
                   placeholder="Descreva a ação corretiva..."
+                  value={acaoExecucao}
+                  onChange={(e) => setAcaoExecucao(e.target.value)}
                 />
               </div>
             </div>
@@ -174,8 +256,12 @@ function Modal({
                 <div className="status-box"></div>
               </div>
               <div className="status-item">
-                <label>Analisys</label>
-                <select className="analysis-select">
+                <label>Analysis</label>
+                <select 
+                  className="analysis-select"
+                  value={analysis}
+                  onChange={(e) => setAnalysis(e.target.value)}
+                >
                   <option>Parts</option>
                   <option>Process</option>
                   <option>Investigation</option>
@@ -184,70 +270,68 @@ function Modal({
             </div>
           </div>
 
-          {/* 3 responsabilidade */}
+          {/* 3. Responsabilidade */}
           <div className="modal-section">
             <h4>Responsabilidade</h4>
 
             <div className="form-group">
               <label>Nome</label>
               <div className="dept-control">
-                <select className="dept-select">
-                  <option>ITEM DE CONTA TRABALHO</option>
-                </select>
-                <button className="btn-control">+</button>
-                <button className="btn-control">-</button>
+                <input 
+                  type="text"
+                  className="dept-select"
+                  value={responsible}
+                  onChange={(e) => setResponsible(e.target.value)}
+                />
               </div>
             </div>
 
             <div className="form-group">
               <label>Departamento</label>
               <div className="dept-control">
-                <select className="dept-select">
-                  <option>QUALIDADE METROLOGIA</option>
-                </select>
-                <button className="btn-control">+</button>
-                <button className="btn-control">-</button>
+                <input 
+                  type="text"
+                  className="dept-select"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                />
               </div>
-            </div>
-
-            <div className="form-group">
-              <label>Responsável</label>
-              <div className="name-control">
-                <div className="name-box">ITEM DE CONTA TRABALHO (QUALIDADE METROLOGIA)</div>
-                <div className="nav-buttons">
-                  <button className="btn-nav">&lt;</button>
-                </div>
-              </div>
-            </div>
-
-            <div className="action-buttons">
-              <button className="btn-action">Remover</button>
-              <button className="btn-action">Limpar</button>
             </div>
           </div>
 
-          {/*4 prazo */}
+          {/* 4. Prazo e Registro */}
           <div className="modal-section-right">
             <div className="modal-section">
               <h4>Prazo</h4>
-              <input type="date" className="date-input" defaultValue="2025-11-20" />
-              <select className="year-select">
-                <option>Year 2025</option>
+              <input 
+                type="date" 
+                className="date-input" 
+                value={prazo}
+                onChange={(e) => setPrazo(e.target.value)}
+              />
+              <select 
+                className="year-select"
+                value={year}
+                onChange={(e) => setYear(parseInt(e.target.value))}
+              >
+                <option value={2024}>Year 2024</option>
+                <option value={2025}>Year 2025</option>
+                <option value={2026}>Year 2026</option>
               </select>
-              <select className="week-label">
-                <option>Week</option>
-              </select>
-              <input type="number" className="week-input" defaultValue="47" />
+              <input 
+                type="number" 
+                className="week-input" 
+                value={week}
+                onChange={(e) => setWeek(parseInt(e.target.value))}
+                min="1"
+                max="52"
+              />
             </div>
 
             <div className="modal-section">
               <h4>Registro</h4>
-              <button className="btn-save">Gravar</button>
+              <button className="btn-save" onClick={handleSave}>Gravar</button>
               <button className="btn-export">Exportar</button>
-              <div className="icon-buttons">
-                <button className="btn-icon">📁</button>
-                <button className="btn-icon">🖨️</button>
-              </div>
             </div>
           </div>
         </div>
